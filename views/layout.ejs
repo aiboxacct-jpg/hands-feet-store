@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title><%= title %> · <%= storeName %></title>
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><%= storeName %></a>
+      <nav class="nav">
+        <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Browse</a>
+        <% if (user) { %>
+          <% if (user.role === 'seller' || user.role === 'admin') { %>
+            <a href="/seller" class="<%= currentPath.startsWith('/seller') ? 'active' : '' %>">Sell</a>
+          <% } %>
+          <a href="/orders">My orders</a>
+          <% if (user.role === 'admin') { %>
+            <a href="/admin" class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>">Admin</a>
+          <% } %>
+          <a href="/account">Account</a>
+          <form action="/logout" method="post" class="inline-form">
+            <button class="btn ghost small" type="submit">Log out</button>
+          </form>
+        <% } else { %>
+          <a href="/login">Log in</a>
+          <a href="/register" class="btn small">Sign up</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <% if (flash) { %>
+      <div class="flash <%= flash.type %>"><%= flash.msg %></div>
+    <% } %>
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <%= storeName %> · Adults only (18+) · Be safe and follow your local laws.
+    </div>
+  </footer>
+</body>
+</html>

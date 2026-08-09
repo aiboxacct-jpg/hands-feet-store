@@ -1,0 +1,9 @@
+node_modules/
+data/
+uploads/
+*.log
+.env
+
+# Local secrets / notes — never publish
+information.txt
+.claude/settings.local.json

@@ -1,0 +1,48 @@
+<p style="margin-top:18px;"><a href="/" class="muted">← Back to browse</a></p>
+
+<div class="detail">
+  <div>
+    <% if (images.length) { %>
+      <img class="main-img" id="mainImg" src="<%= images[0].url %>" alt="<%= product.title %>">
+      <% if (images.length > 1) { %>
+        <div class="thumbs">
+          <% images.forEach(function(im){ %>
+            <img src="<%= im.url %>" onclick="document.getElementById('mainImg').src=this.src">
+          <% }); %>
+        </div>
+      <% } %>
+    <% } else { %>
+      <div class="main-img" style="display:flex;align-items:center;justify-content:center;color:var(--muted);">No photo</div>
+    <% } %>
+  </div>
+
+  <div>
+    <span class="tag"><%= categoryLabels[product.category] %></span>
+    <h1 style="margin-top:8px;"><%= product.title %></h1>
+    <div class="price-big"><%= money(product.price_cents) %></div>
+    <p class="muted">Sold by <strong><%= product.seller_name %></strong></p>
+
+    <% if (product.status !== 'active') { %>
+      <p><span class="badge <%= product.status %>"><%= product.status %></span> — not available for purchase.</p>
+    <% } else { %>
+      <% if (user && user.id === product.seller_id) { %>
+        <p class="muted">This is your listing. <a href="/seller/<%= product.id %>/edit">Edit it</a>.</p>
+      <% } else { %>
+        <a class="btn" href="/product/<%= product.id %>/checkout" style="margin-top:8px;">Buy — <%= money(product.price_cents) %></a>
+      <% } %>
+    <% } %>
+
+    <% if (product.description) { %>
+      <div class="section">
+        <h2>Description</h2>
+        <p style="white-space:pre-wrap;"><%= product.description %></p>
+      </div>
+    <% } %>
+    <% if (product.seller_bio) { %>
+      <div class="section">
+        <h2>About the seller</h2>
+        <p class="muted" style="white-space:pre-wrap;"><%= product.seller_bio %></p>
+      </div>
+    <% } %>
+  </div>
+</div>

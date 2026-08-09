@@ -1,0 +1,37 @@
+<div class="form-card">
+  <h1>Checkout</h1>
+  <p class="page-sub"><strong><%= product.title %></strong> — <%= money(product.price_cents) %></p>
+
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+
+  <% if (options.length === 0) { %>
+    <p>This seller hasn't set up a payment method yet, so this item can't be purchased right now. Please check back later.</p>
+    <a class="btn secondary" href="/product/<%= product.id %>">Back</a>
+  <% } else { %>
+    <form action="/product/<%= product.id %>/checkout" method="post">
+      <label>Pay with</label>
+      <div class="radio-row" style="flex-direction:column;">
+        <% options.forEach(function(o, i){ %>
+          <label>
+            <input type="radio" name="payment_method" value="<%= o.key %>" <%= i === 0 ? 'checked' : '' %>>
+            <span><strong><%= o.label %></strong> — send to <code><%= o.handle %></code></span>
+          </label>
+        <% }); %>
+      </div>
+
+      <label for="contact">Your contact (so the seller can reach you)</label>
+      <input type="text" id="contact" name="contact" placeholder="Email, phone, or app username">
+      <p class="hint">Digital items are usually delivered here or by message. Physical items ship to an address you'll share with the seller.</p>
+
+      <label for="note">Note to seller (optional)</label>
+      <textarea id="note" name="note" placeholder="Anything the seller should know…"></textarea>
+
+      <div style="background:#f7f2f5;border-radius:10px;padding:12px;margin:14px 0;">
+        <strong>How it works:</strong> Place the order, then send <strong><%= money(product.price_cents) %></strong>
+        via your chosen app. The seller confirms your payment and delivers your item.
+      </div>
+
+      <button class="btn" type="submit" style="width:100%;">Place order</button>
+    </form>
+  <% } %>
+</div>

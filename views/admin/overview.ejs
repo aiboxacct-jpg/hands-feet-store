@@ -1,0 +1,38 @@
+<h1>Admin</h1>
+<div class="chips">
+  <a class="chip active" href="/admin">Overview</a>
+  <a class="chip" href="/admin/users">Users</a>
+  <a class="chip" href="/admin/listings">Listings</a>
+  <a class="chip" href="/admin/orders">Orders</a>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="n"><%= stats.users %></div><div class="l">Users</div></div>
+  <div class="stat"><div class="n"><%= stats.sellers %></div><div class="l">Sellers</div></div>
+  <div class="stat"><div class="n"><%= stats.listings %></div><div class="l">Listings</div></div>
+  <div class="stat"><div class="n"><%= stats.orders %></div><div class="l">Orders</div></div>
+  <div class="stat"><div class="n"><%= money(stats.revenue) %></div><div class="l">Confirmed sales</div></div>
+</div>
+
+<h2>Recent orders</h2>
+<% if (recentOrders.length === 0) { %>
+  <p class="muted">No orders yet.</p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        <% recentOrders.forEach(function(o){ %>
+          <tr>
+            <td><a href="/orders/<%= o.id %>">#<%= o.id %></a></td>
+            <td><%= o.title %></td>
+            <td><%= o.buyer_name %></td>
+            <td><%= o.seller_name %></td>
+            <td><%= money(o.amount_cents) %></td>
+            <td><span class="badge <%= o.status %>"><%= o.status %></span></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

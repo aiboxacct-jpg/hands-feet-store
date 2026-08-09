@@ -1,0 +1,25 @@
+# Render Blueprint. In Render: New + -> Blueprint -> connect this repo.
+# It creates a free web service. You then fill in the secret env vars
+# (DATABASE_URL, DATABASE_AUTH_TOKEN, CLOUDINARY_URL) in the dashboard.
+services:
+  - type: web
+    name: creator-store
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true       # Render generates a random secret
+      - key: DATABASE_URL
+        sync: false               # from Turso (libsql://...)
+      - key: DATABASE_AUTH_TOKEN
+        sync: false               # from Turso
+      - key: CLOUDINARY_URL
+        sync: false               # from Cloudinary (cloudinary://key:secret@cloud)
+      - key: STORE_NAME
+        sync: false               # your store name (optional)
+      - key: ADMIN_EMAIL
+        sync: false               # your admin login (optional)
+      - key: ADMIN_PASSWORD
+        sync: false               # your admin password (set this!)

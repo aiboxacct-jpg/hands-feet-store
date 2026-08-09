@@ -1,0 +1,35 @@
+<div class="form-card">
+  <h1>My account</h1>
+  <p class="page-sub"><%= user.email %> · <span class="badge active"><%= user.role %></span></p>
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+
+  <form action="/account" method="post">
+    <label for="display_name">Display name</label>
+    <input type="text" id="display_name" name="display_name" value="<%= user.display_name %>" required>
+
+    <label for="bio">Bio (shown on your listings)</label>
+    <textarea id="bio" name="bio"><%= user.bio || '' %></textarea>
+
+    <h2>Payment handles</h2>
+    <p class="hint">Buyers see these at checkout so they can pay you directly. Fill in the ones you use.</p>
+
+    <label for="cashapp">Cash App ($cashtag)</label>
+    <input type="text" id="cashapp" name="cashapp" value="<%= user.cashapp || '' %>" placeholder="$yourtag">
+
+    <label for="venmo">Venmo (@username)</label>
+    <input type="text" id="venmo" name="venmo" value="<%= user.venmo || '' %>" placeholder="@your-venmo">
+
+    <label for="paypal">PayPal (email or PayPal.Me link)</label>
+    <input type="text" id="paypal" name="paypal" value="<%= user.paypal || '' %>" placeholder="you@email.com or paypal.me/you">
+
+    <button class="btn" type="submit" style="width:100%; margin-top:16px;">Save changes</button>
+  </form>
+
+  <% if (user.role === 'buyer') { %>
+    <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;">
+    <p>Want to sell too?</p>
+    <form action="/become-seller" method="post">
+      <button class="btn secondary" type="submit">Become a seller</button>
+    </form>
+  <% } %>
+</div>

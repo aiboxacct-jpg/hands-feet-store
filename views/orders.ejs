@@ -1,0 +1,29 @@
+<h1>My orders</h1>
+
+<% if (orders.length === 0) { %>
+  <div class="empty">
+    <p>You haven't placed any orders yet.</p>
+    <a class="btn" href="/">Browse listings</a>
+  </div>
+<% } else { %>
+  <div class="table-wrap section">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Item</th><th>Seller</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(function(o){ %>
+          <tr>
+            <td><%= o.id %></td>
+            <td><%= o.title %></td>
+            <td><%= o.seller_name %></td>
+            <td><%= money(o.amount_cents) %></td>
+            <td><%= o.payment_method %></td>
+            <td><span class="badge <%= o.status %>"><%= o.status %></span></td>
+            <td><a class="btn small secondary" href="/orders/<%= o.id %>">View</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

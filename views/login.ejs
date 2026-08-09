@@ -1,0 +1,14 @@
+<div class="form-card">
+  <h1>Log in</h1>
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+  <form action="/login" method="post">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="<%= email %>" required>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required>
+
+    <button class="btn" type="submit" style="width:100%; margin-top:16px;">Log in</button>
+  </form>
+  <p class="hint" style="text-align:center; margin-top:16px;">New here? <a href="/register">Create an account</a></p>
+</div>

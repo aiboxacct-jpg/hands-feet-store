@@ -1,0 +1,39 @@
+<h1>All orders</h1>
+<div class="chips">
+  <a class="chip" href="/admin">Overview</a>
+  <a class="chip" href="/admin/users">Users</a>
+  <a class="chip" href="/admin/listings">Listings</a>
+  <a class="chip active" href="/admin/orders">Orders</a>
+</div>
+
+<% if (orders.length === 0) { %>
+  <p class="muted">No orders yet.</p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Pay</th><th>Status</th></tr></thead>
+      <tbody>
+        <% orders.forEach(function(o){ %>
+          <tr>
+            <td><a href="/orders/<%= o.id %>">#<%= o.id %></a></td>
+            <td><%= o.title %></td>
+            <td><%= o.buyer_name %></td>
+            <td><%= o.seller_name %></td>
+            <td><%= money(o.amount_cents) %></td>
+            <td><%= o.payment_method %></td>
+            <td>
+              <form action="/admin/orders/<%= o.id %>/status" method="post" style="display:flex;gap:6px;">
+                <select name="status">
+                  <% ['pending','paid','shipped','cancelled'].forEach(function(s){ %>
+                    <option value="<%= s %>" <%= o.status === s ? 'selected' : '' %>><%= s %></option>
+                  <% }); %>
+                </select>
+                <button class="btn small secondary" type="submit">Set</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

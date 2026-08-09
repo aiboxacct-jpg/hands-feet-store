@@ -1,0 +1,41 @@
+<h1>Browse listings</h1>
+<p class="page-sub">Photos and items from independent creators.</p>
+
+<form method="get" action="/" style="margin-top:14px;">
+  <div class="row" style="max-width:520px;">
+    <input type="text" name="q" value="<%= q %>" placeholder="Search listings…">
+    <button class="btn secondary" type="submit" style="flex:0 0 auto;">Search</button>
+  </div>
+</form>
+
+<div class="chips">
+  <a class="chip <%= !category ? 'active' : '' %>" href="/">All</a>
+  <% categories.forEach(function(c){ %>
+    <a class="chip <%= category === c ? 'active' : '' %>" href="/?category=<%= c %>"><%= categoryLabels[c] %></a>
+  <% }); %>
+</div>
+
+<% if (products.length === 0) { %>
+  <div class="empty">
+    <p>No listings yet<%= q ? ' for “' + q + '”' : '' %>.</p>
+    <% if (user && (user.role === 'seller' || user.role === 'admin')) { %>
+      <a class="btn" href="/seller/new">Create the first listing</a>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="grid">
+    <% products.forEach(function(p){ %>
+      <a class="card" href="/product/<%= p.id %>">
+        <div class="thumb" <% if (p.thumb) { %>style="background-image:url('<%= p.thumb %>')"<% } %>>
+          <% if (!p.thumb) { %>No photo<% } %>
+        </div>
+        <div class="body">
+          <span class="tag"><%= categoryLabels[p.category] %></span>
+          <span class="title"><%= p.title %></span>
+          <span class="price"><%= money(p.price_cents) %></span>
+          <span class="meta">by <%= p.seller_name %></span>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+<% } %>

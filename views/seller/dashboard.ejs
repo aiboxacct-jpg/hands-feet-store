@@ -1,0 +1,75 @@
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+  <h1 style="margin-bottom:0;">Seller dashboard</h1>
+  <a class="btn" href="/seller/new" style="margin-left:auto;">+ New listing</a>
+</div>
+
+<% if (needsHandles) { %>
+  <div class="flash error" style="margin-top:16px;">
+    You haven't added a payment handle yet, so buyers can't check out.
+    <a href="/account">Add Cash App / Venmo / PayPal →</a>
+  </div>
+<% } %>
+
+<h2>My listings</h2>
+<% if (listings.length === 0) { %>
+  <div class="empty"><p>No listings yet.</p><a class="btn" href="/seller/new">Create your first listing</a></div>
+<% } else { %>
+  <div class="grid">
+    <% listings.forEach(function(p){ %>
+      <div class="card">
+        <a href="/product/<%= p.id %>">
+          <div class="thumb" <% if (p.thumb) { %>style="background-image:url('<%= p.thumb %>')"<% } %>>
+            <% if (!p.thumb) { %>No photo<% } %>
+          </div>
+        </a>
+        <div class="body">
+          <span class="badge <%= p.status %>"><%= p.status %></span>
+          <span class="title"><%= p.title %></span>
+          <span class="price"><%= money(p.price_cents) %></span>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <a class="btn small secondary" href="/seller/<%= p.id %>/edit">Edit</a>
+            <form action="/seller/<%= p.id %>/delete" method="post" class="inline-form"
+                  onsubmit="return confirm('Delete this listing?');">
+              <button class="btn small danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<h2>My sales</h2>
+<% if (sales.length === 0) { %>
+  <p class="muted">No orders yet.</p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Item</th><th>Buyer</th><th>Amount</th><th>Pay</th><th>Status</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        <% sales.forEach(function(o){ %>
+          <tr>
+            <td><a href="/orders/<%= o.id %>">#<%= o.id %></a></td>
+            <td><%= o.title %></td>
+            <td><%= o.buyer_name %></td>
+            <td><%= money(o.amount_cents) %></td>
+            <td><%= o.payment_method %></td>
+            <td><span class="badge <%= o.status %>"><%= o.status %></span></td>
+            <td>
+              <form action="/seller/orders/<%= o.id %>/status" method="post" style="display:flex;gap:6px;">
+                <select name="status">
+                  <% ['pending','paid','shipped','cancelled'].forEach(function(s){ %>
+                    <option value="<%= s %>" <%= o.status === s ? 'selected' : '' %>><%= s %></option>
+                  <% }); %>
+                </select>
+                <button class="btn small" type="submit">Save</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

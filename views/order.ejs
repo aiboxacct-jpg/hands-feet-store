@@ -1,0 +1,40 @@
+<div class="form-card">
+  <h1>Order #<%= order.id %></h1>
+  <p class="page-sub"><span class="badge <%= order.status %>"><%= order.status %></span></p>
+
+  <table style="box-shadow:none;">
+    <tr><th>Item</th><td><%= order.title %></td></tr>
+    <tr><th>Amount</th><td><%= money(order.amount_cents) %></td></tr>
+    <tr><th>Seller</th><td><%= order.seller_name %></td></tr>
+    <tr><th>Buyer</th><td><%= order.buyer_name %></td></tr>
+    <tr><th>Payment</th><td><%= order.payment_method %><% if (handle) { %> → <code><%= handle %></code><% } %></td></tr>
+    <tr><th>Placed</th><td><%= order.created_at %> UTC</td></tr>
+  </table>
+
+  <% if (order.status === 'pending' && user.id === order.buyer_id) { %>
+    <div style="background:#fff3dc;border-radius:10px;padding:14px;margin-top:16px;">
+      <strong>Next step:</strong> Send <strong><%= money(order.amount_cents) %></strong>
+      via <strong><%= order.payment_method %></strong><% if (handle) { %> to <code><%= handle %></code><% } %>.
+      Once the seller confirms your payment, your order moves to <em>paid</em>.
+    </div>
+  <% } %>
+
+  <% if (user.id === order.seller_id || user.role === 'admin') { %>
+    <h2>Seller actions</h2>
+    <% if (order.contact) { %><p><strong>Buyer contact:</strong> <%= order.contact %></p><% } %>
+    <% if (order.note) { %><p><strong>Note:</strong> <%= order.note %></p><% } %>
+    <form action="/seller/orders/<%= order.id %>/status" method="post" class="row" style="align-items:flex-end;">
+      <div>
+        <label>Update status</label>
+        <select name="status">
+          <% ['pending','paid','shipped','cancelled'].forEach(function(s){ %>
+            <option value="<%= s %>" <%= order.status === s ? 'selected' : '' %>><%= s %></option>
+          <% }); %>
+        </select>
+      </div>
+      <button class="btn" type="submit" style="flex:0 0 auto;">Save</button>
+    </form>
+  <% } %>
+
+  <p style="margin-top:18px;"><a href="/orders" class="muted">← My orders</a></p>
+</div>

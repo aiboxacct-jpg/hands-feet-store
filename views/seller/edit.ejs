@@ -1,0 +1,61 @@
+<% var isEdit = !!(product && product.id); %>
+<div class="form-card wide">
+  <h1><%= isEdit ? 'Edit listing' : 'New listing' %></h1>
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+
+  <form action="<%= isEdit ? '/seller/' + product.id + '/edit' : '/seller/new' %>" method="post" enctype="multipart/form-data">
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" value="<%= product ? (product.title || '') : '' %>" required>
+
+    <div class="row">
+      <div>
+        <label for="price">Price (USD)</label>
+        <input type="text" id="price" name="price" value="<%= product ? (product.price || '') : '' %>" placeholder="15.00" required>
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <% var labels = {feet:'Feet pics', hands:'Hand pics', toys:'Toys & items', other:'Other'}; %>
+          <% categories.forEach(function(c){ %>
+            <option value="<%= c %>" <%= product && product.category === c ? 'selected' : '' %>><%= labels[c] %></option>
+          <% }); %>
+        </select>
+      </div>
+      <% if (isEdit) { %>
+        <div>
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <% ['active','sold','hidden'].forEach(function(s){ %>
+              <option value="<%= s %>" <%= product.status === s ? 'selected' : '' %>><%= s %></option>
+            <% }); %>
+          </select>
+        </div>
+      <% } %>
+    </div>
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description" placeholder="Describe the item, quantity, condition, delivery…"><%= product ? (product.description || '') : '' %></textarea>
+
+    <label for="images">Photos</label>
+    <input type="file" id="images" name="images" accept="image/*" multiple>
+    <p class="hint">Up to 6 images, 8&nbsp;MB each. <% if (isEdit) { %>New uploads are added to the existing photos.<% } %></p>
+
+    <% if (isEdit && images && images.length) { %>
+      <label>Current photos</label>
+      <div class="gallery">
+        <% images.forEach(function(im){ %>
+          <div style="position:relative;">
+            <img src="<%= im.url %>">
+            <form action="/seller/<%= product.id %>/image/<%= im.id %>/delete" method="post"
+                  onsubmit="return confirm('Remove this photo?');" style="position:absolute;top:4px;right:4px;">
+              <button class="btn small danger" type="submit" style="padding:2px 7px;">×</button>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <button class="btn" type="submit" style="width:100%; margin-top:18px;"><%= isEdit ? 'Save changes' : 'Publish listing' %></button>
+  </form>
+  <p style="margin-top:14px;"><a href="/seller" class="muted">← Back to dashboard</a></p>
+</div>

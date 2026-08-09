@@ -1,0 +1,42 @@
+<h1>All listings</h1>
+<div class="chips">
+  <a class="chip" href="/admin">Overview</a>
+  <a class="chip" href="/admin/users">Users</a>
+  <a class="chip active" href="/admin/listings">Listings</a>
+  <a class="chip" href="/admin/orders">Orders</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Title</th><th>Seller</th><th>Category</th><th>Price</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% listings.forEach(function(p){ %>
+        <tr>
+          <td style="width:56px;">
+            <% if (p.thumb) { %><img src="<%= p.thumb %>" style="width:48px;height:48px;object-fit:cover;border-radius:8px;"><% } %>
+          </td>
+          <td><a href="/product/<%= p.id %>"><%= p.title %></a></td>
+          <td><%= p.seller_name %></td>
+          <td><%= p.category %></td>
+          <td><%= money(p.price_cents) %></td>
+          <td>
+            <form action="/admin/listings/<%= p.id %>/status" method="post" style="display:flex;gap:6px;">
+              <select name="status">
+                <% ['active','sold','hidden'].forEach(function(s){ %>
+                  <option value="<%= s %>" <%= p.status === s ? 'selected' : '' %>><%= s %></option>
+                <% }); %>
+              </select>
+              <button class="btn small secondary" type="submit">Set</button>
+            </form>
+          </td>
+          <td>
+            <form action="/admin/listings/<%= p.id %>/delete" method="post" class="inline-form"
+                  onsubmit="return confirm('Delete this listing?');">
+              <button class="btn small danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>

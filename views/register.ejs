@@ -1,0 +1,30 @@
+<div class="form-card">
+  <h1>Create your account</h1>
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+  <form action="/register" method="post">
+    <label>I want to…</label>
+    <div class="radio-row">
+      <label>
+        <input type="radio" name="role" value="buyer" <%= values.role !== 'seller' ? 'checked' : '' %>>
+        <span>Buy items</span>
+      </label>
+      <label>
+        <input type="radio" name="role" value="seller" <%= values.role === 'seller' ? 'checked' : '' %>>
+        <span>Sell items</span>
+      </label>
+    </div>
+
+    <label for="display_name">Display name</label>
+    <input type="text" id="display_name" name="display_name" value="<%= values.display_name || '' %>" required>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="<%= values.email || '' %>" required>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required>
+    <p class="hint">At least 6 characters.</p>
+
+    <button class="btn" type="submit" style="width:100%; margin-top:16px;">Create account</button>
+  </form>
+  <p class="hint" style="text-align:center; margin-top:16px;">Already have an account? <a href="/login">Log in</a></p>
+</div>

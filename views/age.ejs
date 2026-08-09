@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Age verification · <%= storeName %></title>
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+  <div class="age-wrap">
+    <div class="age-box">
+      <h1><%= storeName %></h1>
+      <p>This site contains adult content and products intended for adults only.</p>
+      <p><strong>You must be 18 years or older to enter.</strong></p>
+      <form action="/age" method="post">
+        <input type="hidden" name="next" value="<%= next %>">
+        <button class="btn" type="submit" style="width:100%; margin-top:8px;">I am 18 or older — Enter</button>
+      </form>
+      <p class="hint" style="margin-top:16px;">By entering you confirm you are of legal age in your jurisdiction.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<h1>Users</h1>
+<div class="chips">
+  <a class="chip" href="/admin">Overview</a>
+  <a class="chip active" href="/admin/users">Users</a>
+  <a class="chip" href="/admin/listings">Listings</a>
+  <a class="chip" href="/admin/orders">Orders</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Role</th><th>Listings</th><th>Orders</th><th>Joined</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(u){ %>
+        <tr>
+          <td><%= u.display_name %></td>
+          <td><%= u.email %></td>
+          <td>
+            <form action="/admin/users/<%= u.id %>/role" method="post" style="display:flex;gap:6px;">
+              <select name="role">
+                <% ['buyer','seller','admin'].forEach(function(r){ %>
+                  <option value="<%= r %>" <%= u.role === r ? 'selected' : '' %>><%= r %></option>
+                <% }); %>
+              </select>
+              <button class="btn small secondary" type="submit">Set</button>
+            </form>
+          </td>
+          <td><%= u.listing_count %></td>
+          <td><%= u.order_count %></td>
+          <td class="muted"><%= (u.created_at || '').slice(0,10) %></td>
+          <td>
+            <% if (u.id !== user.id) { %>
+              <form action="/admin/users/<%= u.id %>/delete" method="post" class="inline-form"
+                    onsubmit="return confirm('Delete this user and all their listings/orders?');">
+                <button class="btn small danger" type="submit">Delete</button>
+              </form>
+            <% } else { %><span class="muted">you</span><% } %>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
