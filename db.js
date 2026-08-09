@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS product_images (
 
 CREATE TABLE IF NOT EXISTS orders (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  buyer_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  buyer_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,   -- NULL = guest checkout
   seller_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   product_id     INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   amount_cents   INTEGER NOT NULL,
@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS orders (
   status         TEXT NOT NULL DEFAULT 'pending',
   contact        TEXT,
   note           TEXT,
+  access_token   TEXT,                                             -- lets a guest revisit their order
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

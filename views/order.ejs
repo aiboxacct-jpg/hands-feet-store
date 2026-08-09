@@ -11,15 +11,18 @@
     <tr><th>Placed</th><td><%= order.created_at %> UTC</td></tr>
   </table>
 
-  <% if (order.status === 'pending' && user.id === order.buyer_id) { %>
+  <% if (order.status === 'pending' && isBuyer) { %>
     <div style="background:#fff3dc;border-radius:10px;padding:14px;margin-top:16px;">
       <strong>Next step:</strong> Send <strong><%= money(order.amount_cents) %></strong>
       via <strong><%= order.payment_method %></strong><% if (handle) { %> to <code><%= handle %></code><% } %>.
       Once the seller confirms your payment, your order moves to <em>paid</em>.
     </div>
+    <% if (!user) { %>
+      <p class="hint" style="margin-top:10px;">💡 Bookmark this page to check your order status later — it's your private link. Or <a href="/register">create an account</a> to track all your orders.</p>
+    <% } %>
   <% } %>
 
-  <% if (user.id === order.seller_id || user.role === 'admin') { %>
+  <% if (isSeller) { %>
     <h2>Seller actions</h2>
     <% if (order.contact) { %><p><strong>Buyer contact:</strong> <%= order.contact %></p><% } %>
     <% if (order.note) { %><p><strong>Note:</strong> <%= order.note %></p><% } %>
@@ -36,5 +39,8 @@
     </form>
   <% } %>
 
-  <p style="margin-top:18px;"><a href="/orders" class="muted">← My orders</a></p>
+  <p style="margin-top:18px;">
+    <% if (user) { %><a href="/orders" class="muted">← My orders</a>
+    <% } else { %><a href="/" class="muted">← Continue shopping</a><% } %>
+  </p>
 </div>

@@ -57,6 +57,7 @@ app.use((req, res, next) => {
     req.path === '/age' ||
     req.path === '/login' ||
     req.path === '/register' ||
+    req.path === '/start-selling' ||
     req.path.startsWith('/public') ||
     req.path.startsWith('/uploads');
   if (req.session.ageConfirmed || exempt) return next();
@@ -70,6 +71,7 @@ app.use((req, res, next) => {
 // --- Routes -----------------------------------------------------------------
 app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/shop'));
+app.use('/start-selling', require('./routes/sell'));
 app.use('/seller', require('./routes/seller'));
 app.use('/admin', require('./routes/admin'));
 

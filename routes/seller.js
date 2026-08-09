@@ -58,10 +58,10 @@ router.get('/', async (req, res) => {
     await db.all('SELECT * FROM products WHERE seller_id = ? ORDER BY created_at DESC', req.user.id)
   );
   const sales = await db.all(
-    `SELECT o.*, p.title, b.display_name AS buyer_name
+    `SELECT o.*, p.title, COALESCE(b.display_name, o.contact, 'Guest') AS buyer_name
        FROM orders o
        JOIN products p ON p.id = o.product_id
-       JOIN users b ON b.id = o.buyer_id
+       LEFT JOIN users b ON b.id = o.buyer_id
       WHERE o.seller_id = ?
       ORDER BY o.created_at DESC`,
     req.user.id

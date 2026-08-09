@@ -1,0 +1,70 @@
+<div class="form-card wide">
+  <h1>Start selling in one step</h1>
+  <p class="page-sub">Create your shop and post your first item together — no separate signup.</p>
+  <% if (error) { %><div class="form-error"><%= error %></div><% } %>
+
+  <form action="/start-selling" method="post" enctype="multipart/form-data">
+    <h2>Your shop</h2>
+    <label for="display_name">Display name (your shop name)</label>
+    <input type="text" id="display_name" name="display_name" value="<%= values.display_name || '' %>" required>
+
+    <div class="row">
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="<%= values.email || '' %>" required>
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <p class="hint">At least 6 characters. You'll use this to manage sales.</p>
+      </div>
+    </div>
+
+    <h2>Get paid</h2>
+    <p class="hint">Add at least one — buyers see it at checkout and pay you directly.</p>
+    <div class="row">
+      <div>
+        <label for="cashapp">Cash App</label>
+        <input type="text" id="cashapp" name="cashapp" value="<%= values.cashapp || '' %>" placeholder="$yourtag">
+      </div>
+      <div>
+        <label for="venmo">Venmo</label>
+        <input type="text" id="venmo" name="venmo" value="<%= values.venmo || '' %>" placeholder="@your-venmo">
+      </div>
+      <div>
+        <label for="paypal">PayPal</label>
+        <input type="text" id="paypal" name="paypal" value="<%= values.paypal || '' %>" placeholder="you@email.com">
+      </div>
+    </div>
+
+    <h2>Your first item</h2>
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" value="<%= values.title || '' %>" required>
+
+    <div class="row">
+      <div>
+        <label for="price">Price (USD)</label>
+        <input type="text" id="price" name="price" value="<%= values.price || '' %>" placeholder="15.00" required>
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <% var labels = {feet:'Feet pics', hands:'Hand pics', toys:'Toys & items', other:'Other'}; %>
+          <% categories.forEach(function(c){ %>
+            <option value="<%= c %>" <%= values.category === c ? 'selected' : '' %>><%= labels[c] %></option>
+          <% }); %>
+        </select>
+      </div>
+    </div>
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description" placeholder="Describe the item, quantity, delivery…"><%= values.description || '' %></textarea>
+
+    <label for="images">Photos</label>
+    <input type="file" id="images" name="images" accept="image/*" multiple>
+    <p class="hint">Up to 6 images, 8&nbsp;MB each.</p>
+
+    <button class="btn" type="submit" style="width:100%; margin-top:18px;">Publish & start selling</button>
+  </form>
+  <p class="hint" style="text-align:center; margin-top:16px;">Already have an account? <a href="/login">Log in</a></p>
+</div>

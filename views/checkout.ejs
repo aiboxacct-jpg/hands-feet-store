@@ -4,6 +4,11 @@
 
   <% if (error) { %><div class="form-error"><%= error %></div><% } %>
 
+  <% if (!user && options.length > 0) { %>
+    <p class="hint" style="margin-bottom:4px;">Checking out as a guest — no account needed.
+      <a href="/login">Log in</a> or <a href="/register">sign up</a> if you'd like to track your orders.</p>
+  <% } %>
+
   <% if (options.length === 0) { %>
     <p>This seller hasn't set up a payment method yet, so this item can't be purchased right now. Please check back later.</p>
     <a class="btn secondary" href="/product/<%= product.id %>">Back</a>

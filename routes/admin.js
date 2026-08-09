@@ -22,10 +22,10 @@ router.get('/', async (req, res) => {
     revenue: (await db.get("SELECT COALESCE(SUM(amount_cents),0) AS s FROM orders WHERE status IN ('paid','shipped')")).s,
   };
   const recentOrders = await db.all(
-    `SELECT o.*, p.title, b.display_name AS buyer_name, s.display_name AS seller_name
+    `SELECT o.*, p.title, COALESCE(b.display_name, o.contact, 'Guest') AS buyer_name, s.display_name AS seller_name
        FROM orders o
        JOIN products p ON p.id = o.product_id
-       JOIN users b ON b.id = o.buyer_id
+       LEFT JOIN users b ON b.id = o.buyer_id
        JOIN users s ON s.id = o.seller_id
       ORDER BY o.created_at DESC LIMIT 10`
   );
@@ -101,10 +101,10 @@ router.post('/listings/:id/delete', async (req, res) => {
 // --- Orders -----------------------------------------------------------------
 router.get('/orders', async (req, res) => {
   const orders = await db.all(
-    `SELECT o.*, p.title, b.display_name AS buyer_name, s.display_name AS seller_name
+    `SELECT o.*, p.title, COALESCE(b.display_name, o.contact, 'Guest') AS buyer_name, s.display_name AS seller_name
        FROM orders o
        JOIN products p ON p.id = o.product_id
-       JOIN users b ON b.id = o.buyer_id
+       LEFT JOIN users b ON b.id = o.buyer_id
        JOIN users s ON s.id = o.seller_id
       ORDER BY o.created_at DESC`
   );

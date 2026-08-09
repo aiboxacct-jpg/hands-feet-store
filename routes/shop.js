@@ -1,4 +1,5 @@
-// Public storefront: browse, product detail, checkout, buyer orders.
+// Public storefront: browse, product detail, checkout (guest or member), buyer orders.
+const crypto = require('crypto');
 const express = require('express');
 const db = require('../db');
 const { requireLogin } = require('../middleware');
@@ -87,7 +88,8 @@ function paymentOptions(seller) {
   return opts;
 }
 
-router.get('/product/:id/checkout', requireLogin, async (req, res) => {
+// Checkout is open to guests. Signed-in users skip re-entering contact.
+router.get('/product/:id/checkout', async (req, res) => {
   const product = await db.get(
     `SELECT p.*, u.display_name AS seller_name, u.cashapp, u.venmo, u.paypal
        FROM products p JOIN users u ON u.id = p.seller_id
@@ -97,44 +99,54 @@ router.get('/product/:id/checkout', requireLogin, async (req, res) => {
   if (!product || product.status !== 'active') {
     return res.status(404).render('error', { title: 'Unavailable', message: 'That item is not available.' });
   }
-  if (product.seller_id === req.user.id) {
+  if (req.user && product.seller_id === req.user.id) {
     return res.render('error', { title: 'Heads up', message: "You can't buy your own listing." });
   }
   const options = paymentOptions(product);
   res.render('checkout', { title: 'Checkout', product, options, error: null });
 });
 
-router.post('/product/:id/checkout', requireLogin, async (req, res) => {
+router.post('/product/:id/checkout', async (req, res) => {
   const product = await db.get('SELECT * FROM products WHERE id = ?', req.params.id);
   if (!product || product.status !== 'active') {
     return res.status(404).render('error', { title: 'Unavailable', message: 'That item is not available.' });
   }
-  if (product.seller_id === req.user.id) {
+  if (req.user && product.seller_id === req.user.id) {
     return res.render('error', { title: 'Heads up', message: "You can't buy your own listing." });
   }
   const seller = await db.get('SELECT * FROM users WHERE id = ?', product.seller_id);
   const options = paymentOptions(seller);
   const method = req.body.payment_method;
-  if (!options.find((o) => o.key === method)) {
-    return res.render('checkout', { title: 'Checkout', product, options, error: 'Please choose a payment method.' });
-  }
   const contact = String(req.body.contact || '').trim();
   const note = String(req.body.note || '').trim();
 
+  const rerender = (error) => res.render('checkout', { title: 'Checkout', product, options, error });
+  if (!options.find((o) => o.key === method)) {
+    return rerender('Please choose a payment method.');
+  }
+  // Guests must leave contact info so the seller can deliver / reach them.
+  if (!req.user && !contact) {
+    return rerender('Please add your contact (email, phone, or app username) so the seller can reach you.');
+  }
+
+  const token = crypto.randomBytes(16).toString('hex');
   const info = await db.run(
-    `INSERT INTO orders (buyer_id, seller_id, product_id, amount_cents, payment_method, contact, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    req.user.id,
+    `INSERT INTO orders (buyer_id, seller_id, product_id, amount_cents, payment_method, contact, note, access_token)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    req.user ? req.user.id : null,
     product.seller_id,
     product.id,
     product.price_cents,
     method,
     contact,
-    note
+    note,
+    token
   );
 
   flash(req, 'success', 'Order placed! Send your payment, then the seller will confirm it.');
-  res.redirect('/orders/' + Number(info.lastInsertRowid));
+  const id = Number(info.lastInsertRowid);
+  // Guests get a tokenized link they can bookmark to check status.
+  res.redirect(req.user ? '/orders/' + id : '/orders/' + id + '?t=' + token);
 });
 
 // --- Buyer orders -----------------------------------------------------------
@@ -151,27 +163,40 @@ router.get('/orders', requireLogin, async (req, res) => {
   res.render('orders', { title: 'My orders', orders });
 });
 
-router.get('/orders/:id', requireLogin, async (req, res) => {
+router.get('/orders/:id', async (req, res) => {
   const order = await db.get(
     `SELECT o.*, p.title, p.category,
             s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal,
-            b.display_name AS buyer_name
+            COALESCE(b.display_name, 'Guest') AS buyer_name
        FROM orders o
        JOIN products p ON p.id = o.product_id
        JOIN users s ON s.id = o.seller_id
-       JOIN users b ON b.id = o.buyer_id
+       LEFT JOIN users b ON b.id = o.buyer_id
       WHERE o.id = ?`,
     req.params.id
   );
   if (!order) {
     return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
   }
-  const isParty = [order.buyer_id, order.seller_id].includes(req.user.id) || req.user.role === 'admin';
-  if (!isParty) {
+  const tokenOk = req.query.t && order.access_token && req.query.t === order.access_token;
+  const isSeller = !!req.user && (req.user.id === order.seller_id || req.user.role === 'admin');
+  const isBuyer = (!!req.user && req.user.id === order.buyer_id) || tokenOk;
+  if (!isSeller && !isBuyer) {
+    // Not logged in as a party and no valid token: send guests to log in.
+    if (!req.user) {
+      req.session.returnTo = req.originalUrl;
+      return res.redirect('/login');
+    }
     return res.status(403).render('error', { title: 'Not allowed', message: 'You cannot view this order.' });
   }
   const handleMap = { cashapp: order.cashapp, venmo: order.venmo, paypal: order.paypal };
-  res.render('order', { title: 'Order #' + order.id, order, handle: handleMap[order.payment_method] });
+  res.render('order', {
+    title: 'Order #' + order.id,
+    order,
+    handle: handleMap[order.payment_method],
+    isSeller,
+    isBuyer,
+  });
 });
 
 module.exports = router;
