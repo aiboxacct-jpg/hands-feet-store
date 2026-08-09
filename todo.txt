@@ -1,3 +1,0 @@
-1. Guest can sign in to buy as well ( paypal/venmo/cashapp )
-2. Make sure they are able to upload content the user gets if they buy through the check out.
-2. Blur pictures just enough ( show feet finders example )

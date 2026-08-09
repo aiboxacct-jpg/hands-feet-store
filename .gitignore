@@ -6,4 +6,5 @@ uploads/
 
 # Local secrets / notes — never publish
 information.txt
+todo.txt
 .claude/settings.local.json
