@@ -36,6 +36,12 @@
     <label for="description">Description</label>
     <textarea id="description" name="description" placeholder="Describe the item, quantity, condition, delivery…"><%= product ? (product.description || '') : '' %></textarea>
 
+    <label style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+      <input type="checkbox" name="blur_previews" value="1" style="width:auto;" <%= product && product.blur_previews ? 'checked' : '' %>>
+      <span>🔒 Blur photos as previews — buyers get the clear originals after they pay</span>
+    </label>
+    <p class="hint">When on, photos you upload here are shown blurred, and each original is delivered automatically once you mark an order paid. <% if (isEdit) { %>(Applies to photos you add now.)<% } %></p>
+
     <label for="images">Preview photos <span class="muted" style="font-weight:400;">(public)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>
     <p class="hint">Up to 6 images. <% if (isEdit) { %>New uploads are added to the existing photos.<% } %></p>

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS products (
   price_cents INTEGER NOT NULL,
   category    TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'active',
+  blur_previews INTEGER NOT NULL DEFAULT 0,   -- 1 = show blurred previews, deliver clear originals
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -139,9 +140,22 @@ async function seedAdmin() {
   console.log('=============================\n');
 }
 
+// Idempotent column additions for databases created before a column existed.
+async function migrate() {
+  const stmts = ['ALTER TABLE products ADD COLUMN blur_previews INTEGER NOT NULL DEFAULT 0'];
+  for (const sql of stmts) {
+    try {
+      await backend.exec(sql);
+    } catch (_) {
+      /* column already exists — ignore */
+    }
+  }
+}
+
 async function init() {
   backend = usingTurso ? await tursoBackend() : nodeSqliteBackend();
   await backend.exec(SCHEMA);
+  await migrate();
   await seedAdmin();
   console.log('Database ready (' + (usingTurso ? 'Turso/libSQL' : 'local node:sqlite') + ').');
 }

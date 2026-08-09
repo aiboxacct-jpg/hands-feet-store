@@ -11,6 +11,15 @@ const crypto = require('crypto');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const useCloudinary = !!process.env.CLOUDINARY_URL;
 
+// Produce a heavily-blurred, downscaled JPEG for a public preview. The detail is
+// destroyed (not just visually hidden), so the clear original can't be recovered.
+async function blurBuffer(buffer) {
+  const Jimp = require('jimp');
+  const img = await Jimp.read(buffer);
+  img.scaleToFit(720, 720).quality(60).blur(45);
+  return img.getBufferAsync(Jimp.MIME_JPEG);
+}
+
 let cloudinary = null;
 if (useCloudinary) {
   cloudinary = require('cloudinary').v2; // reads CLOUDINARY_URL from env automatically
@@ -120,6 +129,7 @@ async function deleteDeliverable(d) {
 module.exports = {
   uploadImage,
   deleteImage,
+  blurBuffer,
   uploadDeliverable,
   deliverableUrl,
   deliverableDiskPath,

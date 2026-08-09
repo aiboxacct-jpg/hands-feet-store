@@ -26,8 +26,11 @@
   <div class="grid">
     <% products.forEach(function(p){ %>
       <a class="card" href="/product/<%= p.id %>">
-        <div class="thumb" <% if (p.thumb) { %>style="background-image:url('<%= p.thumb %>')"<% } %>>
+        <div class="thumb" style="position:relative;<% if (p.thumb) { %>background-image:url('<%= p.thumb %>')<% } %>">
           <% if (!p.thumb) { %>No photo<% } %>
+          <% if (p.blur_previews) { %>
+            <span style="position:absolute;top:8px;right:8px;background:rgba(43,36,48,.82);color:#fff;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:600;">🔒</span>
+          <% } %>
         </div>
         <div class="body">
           <span class="tag"><%= categoryLabels[p.category] %></span>

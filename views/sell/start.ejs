@@ -60,6 +60,12 @@
     <label for="description">Description</label>
     <textarea id="description" name="description" placeholder="Describe the item, quantity, delivery…"><%= values.description || '' %></textarea>
 
+    <label style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+      <input type="checkbox" name="blur_previews" value="1" style="width:auto;" <%= values.blur_previews ? 'checked' : '' %>>
+      <span>🔒 Blur my photos as previews — buyers get the clear originals after they pay</span>
+    </label>
+    <p class="hint">Perfect for selling pics: your listing shows a blurred teaser, and each photo's full-quality original is delivered automatically once you confirm the buyer's payment.</p>
+
     <label for="images">Preview photos <span class="muted" style="font-weight:400;">(shown publicly on your listing)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>
     <p class="hint">Up to 6 images.</p>

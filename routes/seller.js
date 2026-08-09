@@ -3,7 +3,8 @@ const express = require('express');
 const multer = require('multer');
 const db = require('../db');
 const { requireRole } = require('../middleware');
-const { uploadImage, deleteImage, uploadDeliverable, deleteDeliverable } = require('../storage');
+const { deleteImage, deleteDeliverable } = require('../storage');
+const listing = require('../listing');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -46,37 +47,8 @@ async function attachThumb(products) {
   return products;
 }
 
-async function saveImages(files, productId, startPos) {
-  let pos = startPos;
-  for (const f of files || []) {
-    const { url, public_id } = await uploadImage(f.buffer, f.originalname);
-    await db.run(
-      'INSERT INTO product_images (product_id, url, public_id, position) VALUES (?, ?, ?, ?)',
-      productId,
-      url,
-      public_id,
-      pos++
-    );
-  }
-}
-
-async function saveDeliverables(files, productId, startPos) {
-  let pos = startPos;
-  for (const f of files || []) {
-    const d = await uploadDeliverable(f.buffer, f.originalname);
-    await db.run(
-      'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
-      productId,
-      d.storage,
-      d.ref,
-      d.resource_type,
-      d.original_name,
-      pos++
-    );
-  }
-}
-
 const filesOf = (req, field) => (req.files && req.files[field]) || [];
+const isBlurOn = (req) => req.body.blur_previews === 'on' || req.body.blur_previews === '1';
 
 // --- Dashboard --------------------------------------------------------------
 router.get('/', async (req, res) => {
@@ -118,17 +90,19 @@ router.post('/new', upload, async (req, res) => {
     });
   }
 
+  const blur = isBlurOn(req);
   const info = await db.run(
-    'INSERT INTO products (seller_id, title, description, price_cents, category) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews) VALUES (?, ?, ?, ?, ?, ?)',
     req.user.id,
     title,
     description,
     priceCents,
-    category
+    category,
+    blur ? 1 : 0
   );
   const productId = Number(info.lastInsertRowid);
-  await saveImages(filesOf(req, 'images'), productId, 0);
-  await saveDeliverables(filesOf(req, 'deliverables'), productId, 0);
+  const { nextDel } = await listing.saveImages(filesOf(req, 'images'), productId, blur, 0, 0);
+  await listing.saveDeliverables(filesOf(req, 'deliverables'), productId, nextDel);
 
   flash(req, 'success', 'Listing published.');
   res.redirect('/seller');
@@ -182,20 +156,28 @@ router.post('/:id/edit', upload, async (req, res) => {
     });
   }
 
+  const blur = isBlurOn(req);
   await db.run(
-    'UPDATE products SET title = ?, description = ?, price_cents = ?, category = ?, status = ? WHERE id = ?',
+    'UPDATE products SET title = ?, description = ?, price_cents = ?, category = ?, status = ?, blur_previews = ? WHERE id = ?',
     title,
     description,
     priceCents,
     category,
     status,
+    blur ? 1 : 0,
     product.id
   );
 
   const imgRow = await db.get('SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE product_id = ?', product.id);
-  await saveImages(filesOf(req, 'images'), product.id, Number(imgRow.m) + 1);
   const delRow = await db.get('SELECT COALESCE(MAX(position), -1) AS m FROM deliverables WHERE product_id = ?', product.id);
-  await saveDeliverables(filesOf(req, 'deliverables'), product.id, Number(delRow.m) + 1);
+  const { nextDel } = await listing.saveImages(
+    filesOf(req, 'images'),
+    product.id,
+    blur,
+    Number(imgRow.m) + 1,
+    Number(delRow.m) + 1
+  );
+  await listing.saveDeliverables(filesOf(req, 'deliverables'), product.id, nextDel);
 
   flash(req, 'success', 'Listing updated.');
   res.redirect('/seller');

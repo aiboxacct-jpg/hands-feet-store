@@ -3,7 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { uploadImage, uploadDeliverable } = require('../storage');
+const listing = require('../listing');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -70,43 +70,20 @@ router.post('/', upload, async (req, res) => {
   const sellerId = Number(userInfo.lastInsertRowid);
 
   // Create the first listing.
+  const blur = b.blur_previews === 'on' || b.blur_previews === '1';
   const prodInfo = await db.run(
-    'INSERT INTO products (seller_id, title, description, price_cents, category) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews) VALUES (?, ?, ?, ?, ?, ?)',
     sellerId,
     title,
     description,
     priceCents,
-    category
+    category,
+    blur ? 1 : 0
   );
   const productId = Number(prodInfo.lastInsertRowid);
 
-  const images = (req.files && req.files.images) || [];
-  let ipos = 0;
-  for (const f of images) {
-    const { url, public_id } = await uploadImage(f.buffer, f.originalname);
-    await db.run(
-      'INSERT INTO product_images (product_id, url, public_id, position) VALUES (?, ?, ?, ?)',
-      productId,
-      url,
-      public_id,
-      ipos++
-    );
-  }
-
-  const deliverables = (req.files && req.files.deliverables) || [];
-  let dpos = 0;
-  for (const f of deliverables) {
-    const d = await uploadDeliverable(f.buffer, f.originalname);
-    await db.run(
-      'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
-      productId,
-      d.storage,
-      d.ref,
-      d.resource_type,
-      d.original_name,
-      dpos++
-    );
-  }
+  const { nextDel } = await listing.saveImages((req.files && req.files.images) || [], productId, blur, 0, 0);
+  await listing.saveDeliverables((req.files && req.files.deliverables) || [], productId, nextDel);
 
   // Log them in.
   req.session.userId = sellerId;

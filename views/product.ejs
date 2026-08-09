@@ -3,7 +3,12 @@
 <div class="detail">
   <div>
     <% if (images.length) { %>
-      <img class="main-img" id="mainImg" src="<%= images[0].url %>" alt="<%= product.title %>">
+      <div style="position:relative;">
+        <img class="main-img" id="mainImg" src="<%= images[0].url %>" alt="<%= product.title %>">
+        <% if (product.blur_previews) { %>
+          <span style="position:absolute;bottom:10px;left:10px;background:rgba(43,36,48,.82);color:#fff;padding:6px 12px;border-radius:999px;font-size:.8rem;font-weight:600;">🔒 Preview — full quality after purchase</span>
+        <% } %>
+      </div>
       <% if (images.length > 1) { %>
         <div class="thumbs">
           <% images.forEach(function(im){ %>
