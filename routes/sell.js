@@ -3,16 +3,22 @@ const express = require('express');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { uploadImage } = require('../storage');
+const { uploadImage, uploadDeliverable } = require('../storage');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024, files: 6 },
-  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
-});
+  limits: { fileSize: 50 * 1024 * 1024, files: 16 },
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'images') return cb(null, /^image\//.test(file.mimetype));
+    return cb(null, true); // deliverables: any file type
+  },
+}).fields([
+  { name: 'images', maxCount: 6 },
+  { name: 'deliverables', maxCount: 10 },
+]);
 
 function priceToCents(input) {
   const n = Math.round(parseFloat(String(input).replace(/[^0-9.]/g, '')) * 100);
@@ -25,7 +31,7 @@ router.get('/', (req, res) => {
   res.render('sell/start', { title: 'Start selling', values: {}, categories: CATEGORIES, error: null });
 });
 
-router.post('/', upload.array('images', 6), async (req, res) => {
+router.post('/', upload, async (req, res) => {
   const b = req.body;
   const email = String(b.email || '').trim().toLowerCase();
   const displayName = String(b.display_name || '').trim();
@@ -74,15 +80,31 @@ router.post('/', upload.array('images', 6), async (req, res) => {
   );
   const productId = Number(prodInfo.lastInsertRowid);
 
-  let pos = 0;
-  for (const f of req.files || []) {
+  const images = (req.files && req.files.images) || [];
+  let ipos = 0;
+  for (const f of images) {
     const { url, public_id } = await uploadImage(f.buffer, f.originalname);
     await db.run(
       'INSERT INTO product_images (product_id, url, public_id, position) VALUES (?, ?, ?, ?)',
       productId,
       url,
       public_id,
-      pos++
+      ipos++
+    );
+  }
+
+  const deliverables = (req.files && req.files.deliverables) || [];
+  let dpos = 0;
+  for (const f of deliverables) {
+    const d = await uploadDeliverable(f.buffer, f.originalname);
+    await db.run(
+      'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
+      productId,
+      d.storage,
+      d.ref,
+      d.resource_type,
+      d.original_name,
+      dpos++
     );
   }
 

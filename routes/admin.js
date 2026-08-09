@@ -2,7 +2,7 @@
 const express = require('express');
 const db = require('../db');
 const { requireRole } = require('../middleware');
-const { deleteImage } = require('../storage');
+const { deleteImage, deleteDeliverable } = require('../storage');
 
 const router = express.Router();
 
@@ -67,8 +67,13 @@ router.post('/users/:id/delete', async (req, res) => {
     'SELECT * FROM product_images WHERE product_id IN (SELECT id FROM products WHERE seller_id = ?)',
     user.id
   );
-  await db.run('DELETE FROM users WHERE id = ?', user.id); // cascades to products/images/orders
+  const dels = await db.all(
+    'SELECT * FROM deliverables WHERE product_id IN (SELECT id FROM products WHERE seller_id = ?)',
+    user.id
+  );
+  await db.run('DELETE FROM users WHERE id = ?', user.id); // cascades to products/images/deliverables/orders
   for (const im of imgs) await deleteImage(im);
+  for (const d of dels) await deleteDeliverable(d);
   flash(req, 'success', 'User deleted.');
   res.redirect('/admin/users');
 });
@@ -92,8 +97,10 @@ router.post('/listings/:id/status', async (req, res) => {
 
 router.post('/listings/:id/delete', async (req, res) => {
   const imgs = await db.all('SELECT * FROM product_images WHERE product_id = ?', req.params.id);
+  const dels = await db.all('SELECT * FROM deliverables WHERE product_id = ?', req.params.id);
   await db.run('DELETE FROM products WHERE id = ?', req.params.id);
   for (const im of imgs) await deleteImage(im);
+  for (const d of dels) await deleteDeliverable(d);
   flash(req, 'success', 'Listing deleted.');
   res.redirect('/admin/listings');
 });

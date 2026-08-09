@@ -42,6 +42,16 @@ CREATE TABLE IF NOT EXISTS product_images (
   position   INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS deliverables (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id    INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  storage       TEXT NOT NULL,          -- 'cloudinary' | 'disk'
+  ref           TEXT NOT NULL,          -- public_id (cloudinary) or filename (disk)
+  resource_type TEXT,                   -- image | raw | video (cloudinary)
+  original_name TEXT,
+  position      INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   buyer_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,   -- NULL = guest checkout
@@ -56,8 +66,9 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_products_seller ON products(seller_id);
-CREATE INDEX IF NOT EXISTS idx_images_product  ON product_images(product_id);
+CREATE INDEX IF NOT EXISTS idx_products_seller    ON products(seller_id);
+CREATE INDEX IF NOT EXISTS idx_images_product     ON product_images(product_id);
+CREATE INDEX IF NOT EXISTS idx_deliverables_product ON deliverables(product_id);
 CREATE INDEX IF NOT EXISTS idx_orders_buyer    ON orders(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_seller   ON orders(seller_id);
 `;

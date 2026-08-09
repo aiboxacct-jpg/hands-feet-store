@@ -60,9 +60,13 @@
     <label for="description">Description</label>
     <textarea id="description" name="description" placeholder="Describe the item, quantity, delivery…"><%= values.description || '' %></textarea>
 
-    <label for="images">Photos</label>
+    <label for="images">Preview photos <span class="muted" style="font-weight:400;">(shown publicly on your listing)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>
-    <p class="hint">Up to 6 images, 8&nbsp;MB each.</p>
+    <p class="hint">Up to 6 images.</p>
+
+    <label for="deliverables">Delivery files <span class="muted" style="font-weight:400;">(optional — what the buyer downloads after paying)</span></label>
+    <input type="file" id="deliverables" name="deliverables" multiple>
+    <p class="hint">Bundle the real content here — photos, a zip, a video, etc. It stays private and unlocks for the buyer the moment you confirm their payment. Up to 10 files, 50&nbsp;MB each.</p>
 
     <button class="btn" type="submit" style="width:100%; margin-top:18px;">Publish & start selling</button>
   </form>

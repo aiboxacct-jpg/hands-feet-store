@@ -55,4 +55,76 @@ async function deleteImage(image) {
   }
 }
 
-module.exports = { uploadImage, deleteImage, UPLOAD_DIR, useCloudinary };
+// --- Deliverables (private files a buyer downloads AFTER paying) -------------
+const DELIVERABLES_DIR = path.join(__dirname, 'deliverables');
+
+// Upload a private deliverable. Returns a row for the `deliverables` table.
+function uploadDeliverable(buffer, originalName) {
+  if (useCloudinary) {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'deliverables', resource_type: 'auto', type: 'authenticated' },
+        (err, result) => {
+          if (err) return reject(err);
+          resolve({
+            storage: 'cloudinary',
+            ref: result.public_id,
+            resource_type: result.resource_type, // image | raw | video
+            original_name: originalName || 'file',
+          });
+        }
+      );
+      stream.end(buffer);
+    });
+  }
+  if (!fs.existsSync(DELIVERABLES_DIR)) fs.mkdirSync(DELIVERABLES_DIR, { recursive: true });
+  const ext = (path.extname(originalName || '') || '').toLowerCase().slice(0, 10);
+  const filename = crypto.randomBytes(16).toString('hex') + ext;
+  fs.writeFileSync(path.join(DELIVERABLES_DIR, filename), buffer);
+  return Promise.resolve({ storage: 'disk', ref: filename, resource_type: 'raw', original_name: originalName || 'file' });
+}
+
+// A short-lived signed URL (Cloudinary) the buyer can download from. Disk files
+// are streamed by the route instead (returns null here).
+function deliverableUrl(d) {
+  if (d.storage === 'cloudinary') {
+    return cloudinary.url(d.ref, {
+      resource_type: d.resource_type || 'raw',
+      type: 'authenticated',
+      secure: true,
+      sign_url: true,
+      expires_at: Math.floor(Date.now() / 1000) + 60 * 30, // 30 min
+      attachment: true, // force download
+    });
+  }
+  return null;
+}
+
+function deliverableDiskPath(d) {
+  return path.join(DELIVERABLES_DIR, d.ref);
+}
+
+async function deleteDeliverable(d) {
+  if (!d) return;
+  if (d.storage === 'cloudinary') {
+    try {
+      await cloudinary.uploader.destroy(d.ref, { resource_type: d.resource_type || 'raw', type: 'authenticated' });
+    } catch (_) {
+      /* ignore */
+    }
+    return;
+  }
+  fs.unlink(path.join(DELIVERABLES_DIR, d.ref), () => {});
+}
+
+module.exports = {
+  uploadImage,
+  deleteImage,
+  uploadDeliverable,
+  deliverableUrl,
+  deliverableDiskPath,
+  deleteDeliverable,
+  UPLOAD_DIR,
+  DELIVERABLES_DIR,
+  useCloudinary,
+};

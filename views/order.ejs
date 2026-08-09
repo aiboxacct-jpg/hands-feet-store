@@ -22,6 +22,25 @@
     <% } %>
   <% } %>
 
+  <% if (deliverables.length > 0) { %>
+    <h2>Your download<%= deliverables.length > 1 ? 's' : '' %></h2>
+    <% if (unlocked && (isBuyer || isSeller)) { %>
+      <div style="background:#e5f6ec;border-radius:10px;padding:14px;margin-top:8px;">
+        <p style="margin:0 0 10px;"><strong>✓ Unlocked</strong> — your file<%= deliverables.length > 1 ? 's are' : ' is' %> ready.</p>
+        <% deliverables.forEach(function(d){ %>
+          <a class="btn small" style="margin:4px 4px 0 0;" href="/orders/<%= order.id %>/download/<%= d.id %><%= downloadSuffix %>">⬇ <%= d.original_name %></a>
+        <% }); %>
+      </div>
+    <% } else if (isBuyer) { %>
+      <div style="background:#fff3dc;border-radius:10px;padding:14px;margin-top:8px;">
+        🔒 This order includes <strong><%= deliverables.length %></strong> file<%= deliverables.length > 1 ? 's' : '' %> to download.
+        <strong>They unlock automatically once the seller confirms your payment.</strong>
+      </div>
+    <% } else if (isSeller) { %>
+      <p class="muted">This listing has <strong><%= deliverables.length %></strong> delivery file<%= deliverables.length > 1 ? 's' : '' %>. The buyer can download <%= deliverables.length > 1 ? 'them' : 'it' %> as soon as you mark this order <strong>paid</strong>.</p>
+    <% } %>
+  <% } %>
+
   <% if (isSeller) { %>
     <h2>Seller actions</h2>
     <% if (order.contact) { %><p><strong>Buyer contact:</strong> <%= order.contact %></p><% } %>

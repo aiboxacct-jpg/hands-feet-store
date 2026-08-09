@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const express = require('express');
 const db = require('../db');
 const { requireLogin } = require('../middleware');
+const { deliverableUrl, deliverableDiskPath } = require('../storage');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -190,13 +191,55 @@ router.get('/orders/:id', async (req, res) => {
     return res.status(403).render('error', { title: 'Not allowed', message: 'You cannot view this order.' });
   }
   const handleMap = { cashapp: order.cashapp, venmo: order.venmo, paypal: order.paypal };
+  const deliverables = await db.all(
+    'SELECT id, original_name FROM deliverables WHERE product_id = ? ORDER BY position, id',
+    order.product_id
+  );
+  const unlocked = order.status === 'paid' || order.status === 'shipped';
   res.render('order', {
     title: 'Order #' + order.id,
     order,
     handle: handleMap[order.payment_method],
     isSeller,
     isBuyer,
+    deliverables,
+    unlocked,
+    downloadSuffix: req.query.t ? '?t=' + encodeURIComponent(req.query.t) : '',
   });
+});
+
+// --- Download a purchased deliverable (gated: order must be paid) -----------
+router.get('/orders/:id/download/:did', async (req, res) => {
+  const order = await db.get('SELECT * FROM orders WHERE id = ?', req.params.id);
+  if (!order) {
+    return res.status(404).render('error', { title: 'Not found', message: 'Order not found.' });
+  }
+  const tokenOk = req.query.t && order.access_token && req.query.t === order.access_token;
+  const isSeller = !!req.user && (req.user.id === order.seller_id || req.user.role === 'admin');
+  const isBuyer = (!!req.user && req.user.id === order.buyer_id) || tokenOk;
+  if (!isSeller && !isBuyer) {
+    if (!req.user) {
+      req.session.returnTo = '/orders/' + order.id + (req.query.t ? '?t=' + req.query.t : '');
+      return res.redirect('/login');
+    }
+    return res.status(403).render('error', { title: 'Not allowed', message: 'You cannot access this order.' });
+  }
+  // Buyers only get files once the seller has confirmed payment. Sellers/admin can always fetch.
+  const unlocked = order.status === 'paid' || order.status === 'shipped';
+  if (isBuyer && !isSeller && !unlocked) {
+    return res.status(403).render('error', {
+      title: 'Not unlocked yet',
+      message: 'Your files unlock once the seller confirms your payment.',
+    });
+  }
+  const d = await db.get('SELECT * FROM deliverables WHERE id = ? AND product_id = ?', req.params.did, order.product_id);
+  if (!d) {
+    return res.status(404).render('error', { title: 'Not found', message: 'File not found.' });
+  }
+  if (d.storage === 'cloudinary') {
+    return res.redirect(deliverableUrl(d));
+  }
+  return res.download(deliverableDiskPath(d), d.original_name || 'download');
 });
 
 module.exports = router;
