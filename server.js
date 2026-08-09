@@ -12,6 +12,9 @@ const { loadUser } = require('./middleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Behind Render's proxy — needed so req.protocol is 'https' for share links.
+app.set('trust proxy', 1);
+
 // Ensure local upload dir exists (used only when not on Cloudinary).
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -42,6 +45,7 @@ app.use(
 // Make a money formatter and flash messages available to all views.
 app.use((req, res, next) => {
   res.locals.storeName = process.env.STORE_NAME || 'My Store';
+  res.locals.absUrl = (p) => `${req.protocol}://${req.get('host')}${p || ''}`;
   res.locals.money = (cents) => '$' + (Number(cents) / 100).toFixed(2);
   res.locals.flash = req.session.flash || null;
   delete (req.session || {}).flash;

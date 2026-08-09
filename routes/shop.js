@@ -56,6 +56,24 @@ router.get('/', async (req, res) => {
   });
 });
 
+// --- Public seller storefront (the shareable "my store" link) ---------------
+router.get('/store/:id', async (req, res) => {
+  const seller = await db.get('SELECT id, display_name, bio FROM users WHERE id = ?', req.params.id);
+  if (!seller) {
+    return res.status(404).render('error', { title: 'Not found', message: 'That store does not exist.' });
+  }
+  const products = await withThumbnails(
+    await db.all(
+      `SELECT p.*, u.display_name AS seller_name
+         FROM products p JOIN users u ON u.id = p.seller_id
+        WHERE p.seller_id = ? AND p.status = 'active'
+        ORDER BY p.created_at DESC`,
+      seller.id
+    )
+  );
+  res.render('store', { title: seller.display_name, seller, products, categoryLabels: CATEGORY_LABELS });
+});
+
 // --- Product detail ---------------------------------------------------------
 router.get('/product/:id', async (req, res) => {
   const product = await db.get(

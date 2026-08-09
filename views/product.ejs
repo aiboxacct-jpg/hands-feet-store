@@ -25,7 +25,7 @@
     <span class="tag"><%= categoryLabels[product.category] %></span>
     <h1 style="margin-top:8px;"><%= product.title %></h1>
     <div class="price-big"><%= money(product.price_cents) %></div>
-    <p class="muted">Sold by <strong><%= product.seller_name %></strong></p>
+    <p class="muted">Sold by <a href="/store/<%= product.seller_id %>"><strong><%= product.seller_name %></strong></a></p>
 
     <% if (product.status !== 'active') { %>
       <p><span class="badge <%= product.status %>"><%= product.status %></span> — not available for purchase.</p>
@@ -36,6 +36,12 @@
         <a class="btn" href="/product/<%= product.id %>/checkout" style="margin-top:8px;">Buy — <%= money(product.price_cents) %></a>
       <% } %>
     <% } %>
+
+    <%- include('partials/share', {
+      shareUrl: absUrl('/product/' + product.id),
+      shareTitle: product.title + ' — ' + money(product.price_cents),
+      label: (user && user.id === product.seller_id) ? 'Share this listing:' : 'Share:'
+    }) %>
 
     <% if (product.description) { %>
       <div class="section">

@@ -10,6 +10,18 @@
   </div>
 <% } %>
 
+<% var storeUrl = absUrl('/store/' + user.id); %>
+<div class="share-box">
+  <h2>📣 Share your store — this is how buyers find you</h2>
+  <p class="muted" style="margin:0;">Post this one link on Reddit, X, Telegram, or anywhere. Every listing you add shows up here automatically.</p>
+  <div class="share-link">
+    <input type="text" readonly value="<%= storeUrl %>" onclick="this.select()">
+    <button type="button" class="btn small share-copy" data-url="<%= storeUrl %>">🔗 Copy link</button>
+    <a class="btn small secondary" href="/store/<%= user.id %>" target="_blank" rel="noopener">View</a>
+  </div>
+  <%- include('../partials/share', { shareUrl: storeUrl, shareTitle: user.display_name + ' — shop my listings', label: 'Post to:' }) %>
+</div>
+
 <h2>My listings</h2>
 <% if (listings.length === 0) { %>
   <div class="empty"><p>No listings yet.</p><a class="btn" href="/seller/new">Create your first listing</a></div>
@@ -26,7 +38,8 @@
           <span class="badge <%= p.status %>"><%= p.status %></span>
           <span class="title"><%= p.title %></span>
           <span class="price"><%= money(p.price_cents) %></span>
-          <div style="display:flex;gap:8px;margin-top:8px;">
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <button type="button" class="btn small share-copy" data-url="<%= absUrl('/product/' + p.id) %>">🔗 Share</button>
             <a class="btn small secondary" href="/seller/<%= p.id %>/edit">Edit</a>
             <form action="/seller/<%= p.id %>/delete" method="post" class="inline-form"
                   onsubmit="return confirm('Delete this listing?');">

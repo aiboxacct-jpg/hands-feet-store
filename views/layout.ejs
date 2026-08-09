@@ -45,5 +45,24 @@
       <%= storeName %> · Adults only (18+) · Be safe and follow your local laws.
     </div>
   </footer>
+
+  <script>
+    // Copy-link buttons (used by the Share widgets).
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.share-copy');
+      if (!btn) return;
+      var url = btn.getAttribute('data-url');
+      var done = function () {
+        var original = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(function () { btn.textContent = original; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link:', url); });
+      } else {
+        window.prompt('Copy this link:', url);
+      }
+    });
+  </script>
 </body>
 </html>

@@ -167,6 +167,23 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
   .detail { grid-template-columns: 1fr; }
 }
 
+/* Share widget */
+.share { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.share-label { font-weight: 600; color: var(--muted); font-size: 0.9rem; }
+.share-box {
+  background: linear-gradient(135deg, #f6e9f0, #eee9fb);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; margin: 18px 0;
+}
+.share-box h2 { margin: 0 0 4px; }
+.share-link {
+  display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;
+}
+.share-link input {
+  flex: 1; min-width: 220px; background: #fff; border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; font-size: 0.9rem; color: var(--ink);
+}
+
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); margin-top: 48px; padding: 22px 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
 

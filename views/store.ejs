@@ -1,0 +1,45 @@
+<% var storeUrl = absUrl('/store/' + seller.id); %>
+
+<div style="margin-top:20px;">
+  <h1 style="margin-bottom:2px;"><%= seller.display_name %></h1>
+  <p class="muted" style="margin-top:0;"><%= products.length %> item<%= products.length === 1 ? '' : 's' %> for sale</p>
+  <% if (seller.bio) { %><p style="white-space:pre-wrap;max-width:640px;"><%= seller.bio %></p><% } %>
+</div>
+
+<% if (user && user.id === seller.id) { %>
+  <div class="share-box">
+    <h2>📣 This is your public store — share it!</h2>
+    <p class="muted" style="margin:0;">Post this link on Reddit, X, Telegram, or anywhere buyers hang out. Everything you list shows up here automatically.</p>
+    <div class="share-link">
+      <input type="text" readonly value="<%= storeUrl %>" onclick="this.select()">
+      <button type="button" class="btn small share-copy" data-url="<%= storeUrl %>">🔗 Copy</button>
+    </div>
+    <%- include('partials/share', { shareUrl: storeUrl, shareTitle: seller.display_name + ' — shop my listings', label: 'Post to:' }) %>
+  </div>
+<% } else { %>
+  <%- include('partials/share', { shareUrl: storeUrl, shareTitle: seller.display_name + ' — shop my listings', label: 'Share this store:' }) %>
+<% } %>
+
+<% if (products.length === 0) { %>
+  <div class="empty"><p>No items listed yet.</p></div>
+<% } else { %>
+  <div class="grid">
+    <% products.forEach(function(p){ %>
+      <a class="card" href="/product/<%= p.id %>">
+        <div class="thumb" style="position:relative;<% if (p.thumb) { %>background-image:url('<%= p.thumb %>')<% } %>">
+          <% if (!p.thumb) { %>No photo<% } %>
+          <% if (p.blur_previews) { %>
+            <span style="position:absolute;top:8px;right:8px;background:rgba(43,36,48,.82);color:#fff;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:600;">🔒</span>
+          <% } %>
+        </div>
+        <div class="body">
+          <span class="tag"><%= categoryLabels[p.category] %></span>
+          <span class="title"><%= p.title %></span>
+          <span class="price"><%= money(p.price_cents) %></span>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+<% } %>
+
+<p style="margin-top:24px;"><a href="/" class="muted">← Browse all listings</a></p>

@@ -1,0 +1,18 @@
+<%
+  // params: shareUrl, shareTitle, label (optional)
+  var _t = typeof shareTitle !== 'undefined' ? shareTitle : '';
+  var _u = shareUrl;
+  var enc = encodeURIComponent;
+%>
+<div class="share">
+  <span class="share-label"><%= (typeof label !== 'undefined' && label) ? label : 'Share:' %></span>
+  <button type="button" class="btn small share-copy" data-url="<%= _u %>">🔗 Copy link</button>
+  <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
+     href="https://www.reddit.com/submit?url=<%= enc(_u) %>&title=<%= enc(_t) %>">Reddit</a>
+  <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
+     href="https://twitter.com/intent/tweet?url=<%= enc(_u) %>&text=<%= enc(_t) %>">X</a>
+  <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
+     href="https://t.me/share/url?url=<%= enc(_u) %>&text=<%= enc(_t) %>">Telegram</a>
+  <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
+     href="https://wa.me/?text=<%= enc(_t + ' ' + _u) %>">WhatsApp</a>
+</div>
