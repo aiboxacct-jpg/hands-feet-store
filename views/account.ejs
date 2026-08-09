@@ -25,6 +25,24 @@
     <button class="btn" type="submit" style="width:100%; margin-top:16px;">Save changes</button>
   </form>
 
+  <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;">
+
+  <h2>Change password</h2>
+  <% if (passwordError) { %><div class="form-error"><%= passwordError %></div><% } %>
+  <form action="/account/password" method="post">
+    <label for="current_password">Current password</label>
+    <input type="password" id="current_password" name="current_password" required>
+
+    <label for="new_password">New password</label>
+    <input type="password" id="new_password" name="new_password" required>
+    <p class="hint">At least 6 characters.</p>
+
+    <label for="confirm_password">Confirm new password</label>
+    <input type="password" id="confirm_password" name="confirm_password" required>
+
+    <button class="btn" type="submit" style="width:100%; margin-top:16px;">Update password</button>
+  </form>
+
   <% if (user.role === 'buyer') { %>
     <hr style="border:none;border-top:1px solid var(--line);margin:22px 0;">
     <p>Want to sell too?</p>

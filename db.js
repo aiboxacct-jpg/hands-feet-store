@@ -85,10 +85,19 @@ function nodeSqliteBackend() {
 // --- Turso / libSQL backend (production) -----------------------------------
 async function tursoBackend() {
   const { createClient } = await import('@libsql/client/web');
-  const client = createClient({
-    url: process.env.DATABASE_URL,
-    authToken: process.env.DATABASE_AUTH_TOKEN,
-  });
+  const url = (process.env.DATABASE_URL || '').trim();
+  const authToken = (process.env.DATABASE_AUTH_TOKEN || '').trim();
+  // Guard against a masked value (e.g. "eyJ…••••") being copied from a settings box.
+  if (/[^\x20-\x7E]/.test(authToken)) {
+    throw new Error(
+      'DATABASE_AUTH_TOKEN contains invalid characters — it looks like a masked "••••" value was ' +
+        'copied instead of the real token. Re-copy the full token as plain text and set it again.'
+    );
+  }
+  if (/[^\x20-\x7E]/.test(url)) {
+    throw new Error('DATABASE_URL contains invalid characters. Re-copy it as plain text and set it again.');
+  }
+  const client = createClient({ url, authToken });
   return {
     exec: async (sql) => client.executeMultiple(sql),
     run: async (sql, ...args) => {

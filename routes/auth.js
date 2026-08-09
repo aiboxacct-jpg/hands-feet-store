@@ -76,7 +76,7 @@ router.post('/logout', (req, res) => {
 
 // --- Account settings -------------------------------------------------------
 router.get('/account', requireLogin, (req, res) => {
-  res.render('account', { title: 'My account', error: null });
+  res.render('account', { title: 'My account', error: null, passwordError: null });
 });
 
 router.post('/account', requireLogin, async (req, res) => {
@@ -86,7 +86,7 @@ router.post('/account', requireLogin, async (req, res) => {
   const venmo = String(req.body.venmo || '').trim();
   const paypal = String(req.body.paypal || '').trim();
   if (!displayName) {
-    return res.render('account', { title: 'My account', error: 'Display name is required.' });
+    return res.render('account', { title: 'My account', error: 'Display name is required.', passwordError: null });
   }
   await db.run(
     'UPDATE users SET display_name = ?, bio = ?, cashapp = ?, venmo = ?, paypal = ? WHERE id = ?',
@@ -98,6 +98,29 @@ router.post('/account', requireLogin, async (req, res) => {
     req.user.id
   );
   flash(req, 'success', 'Account updated.');
+  res.redirect('/account');
+});
+
+// Change password.
+router.post('/account/password', requireLogin, async (req, res) => {
+  const current = String(req.body.current_password || '');
+  const next = String(req.body.new_password || '');
+  const confirm = String(req.body.confirm_password || '');
+  const fail = (msg) => res.render('account', { title: 'My account', error: null, passwordError: msg });
+
+  const row = await db.get('SELECT password_hash FROM users WHERE id = ?', req.user.id);
+  if (!row || !bcrypt.compareSync(current, row.password_hash)) {
+    return fail('Your current password is incorrect.');
+  }
+  if (next.length < 6) {
+    return fail('Your new password must be at least 6 characters.');
+  }
+  if (next !== confirm) {
+    return fail('The new passwords do not match.');
+  }
+  const hash = bcrypt.hashSync(next, 10);
+  await db.run('UPDATE users SET password_hash = ? WHERE id = ?', hash, req.user.id);
+  flash(req, 'success', 'Password changed. Use your new password next time you log in.');
   res.redirect('/account');
 });
 
