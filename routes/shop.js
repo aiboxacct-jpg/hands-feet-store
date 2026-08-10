@@ -4,6 +4,7 @@ const express = require('express');
 const db = require('../db');
 const { requireLogin } = require('../middleware');
 const { deliverableUrl, deliverableDiskPath } = require('../storage');
+const chat = require('../chat');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -71,7 +72,23 @@ router.get('/store/:id', async (req, res) => {
       seller.id
     )
   );
-  res.render('store', { title: seller.display_name, seller, products, categoryLabels: CATEGORY_LABELS });
+  // Load this visitor's conversation with the seller (for the on-page chat box).
+  const isOwner = !!req.user && req.user.id === seller.id;
+  let conv = null;
+  let messages = [];
+  if (!isOwner) {
+    conv = await chat.findConversationForVisitor(seller.id, req);
+    if (conv) messages = await chat.getMessages(conv.id);
+  }
+  res.render('store', {
+    title: seller.display_name,
+    seller,
+    products,
+    categoryLabels: CATEGORY_LABELS,
+    isOwner,
+    conv,
+    messages,
+  });
 });
 
 // --- Product detail ---------------------------------------------------------

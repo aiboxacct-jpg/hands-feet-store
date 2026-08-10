@@ -67,7 +67,30 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS conversations (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  seller_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  buyer_user_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,  -- NULL = guest buyer
+  guest_id        TEXT,                    -- device cookie id for a guest buyer
+  buyer_name      TEXT,                    -- display name (guest-entered or account name)
+  access_token    TEXT NOT NULL,           -- private link so a guest can return
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  last_message_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender          TEXT NOT NULL,           -- 'seller' | 'buyer'
+  body            TEXT NOT NULL,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_products_seller    ON products(seller_id);
+CREATE INDEX IF NOT EXISTS idx_conv_seller        ON conversations(seller_id);
+CREATE INDEX IF NOT EXISTS idx_conv_buyer         ON conversations(buyer_user_id);
+CREATE INDEX IF NOT EXISTS idx_conv_guest         ON conversations(guest_id);
+CREATE INDEX IF NOT EXISTS idx_msg_conv           ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_images_product     ON product_images(product_id);
 CREATE INDEX IF NOT EXISTS idx_deliverables_product ON deliverables(product_id);
 CREATE INDEX IF NOT EXISTS idx_orders_buyer    ON orders(buyer_id);

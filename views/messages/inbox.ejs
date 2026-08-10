@@ -1,0 +1,21 @@
+<h1>Messages</h1>
+
+<% if (conversations.length === 0) { %>
+  <div class="empty">
+    <p>No messages yet.</p>
+    <p class="muted">Buyers can message you from your store page, and you can message any seller from their store.</p>
+  </div>
+<% } else { %>
+  <div class="msg-list">
+    <% conversations.forEach(function(c){ %>
+      <a class="msg-row" href="/messages/<%= c.id %>">
+        <div class="msg-row-top">
+          <strong><%= c.other %></strong>
+          <span class="tag" style="<%= c.iamSeller ? '' : 'background:#efeafc;color:var(--accent);' %>"><%= c.iamSeller ? 'Buyer' : 'Seller' %></span>
+          <span class="muted" style="margin-left:auto;font-size:.8rem;"><%= (c.last_message_at || c.created_at || '').slice(0,16) %></span>
+        </div>
+        <div class="muted" style="font-size:.9rem;margin-top:2px;"><%= (c.last_body || '').slice(0,90) %></div>
+      </a>
+    <% }); %>
+  </div>
+<% } %>

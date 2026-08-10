@@ -2,6 +2,7 @@
 require('express-async-errors'); // lets async route handlers forward errors
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
@@ -42,6 +43,20 @@ app.use(
   })
 );
 
+// Give every visitor a persistent "device id" cookie so a guest can be
+// recognized across visits for messaging (independent of the session store).
+app.use((req, res, next) => {
+  const raw = req.headers.cookie || '';
+  const m = raw.match(/(?:^|;\s*)gid=([^;]+)/);
+  let gid = m ? decodeURIComponent(m[1]) : null;
+  if (!gid) {
+    gid = crypto.randomBytes(16).toString('hex');
+    res.cookie('gid', gid, { maxAge: 1000 * 60 * 60 * 24 * 365, httpOnly: true, sameSite: 'lax' });
+  }
+  req.gid = gid;
+  next();
+});
+
 // Make a money formatter and flash messages available to all views.
 app.use((req, res, next) => {
   res.locals.storeName = process.env.STORE_NAME || 'My Store';
@@ -75,6 +90,7 @@ app.use((req, res, next) => {
 // --- Routes -----------------------------------------------------------------
 app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/shop'));
+app.use('/messages', require('./routes/messages'));
 app.use('/start-selling', require('./routes/sell'));
 app.use('/seller', require('./routes/seller'));
 app.use('/admin', require('./routes/admin'));

@@ -37,6 +37,10 @@
       <% } %>
     <% } %>
 
+    <% if (!user || user.id !== product.seller_id) { %>
+      <p style="margin-top:10px;"><a class="btn secondary" href="/store/<%= product.seller_id %>#chat">💬 Message seller</a></p>
+    <% } %>
+
     <%- include('partials/share', {
       shareUrl: absUrl('/product/' + product.id),
       shareTitle: product.title + ' — ' + money(product.price_cents),

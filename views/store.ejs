@@ -42,4 +42,35 @@
   </div>
 <% } %>
 
+<div id="chat" class="chat-box">
+  <h2 style="margin-top:0;">💬 Message <%= seller.display_name %></h2>
+  <% if (isOwner) { %>
+    <p class="muted">This is your store. When buyers message you here, you'll see and reply to them in your <a href="/messages">Messages inbox</a>.</p>
+  <% } else { %>
+    <% if (messages.length) { %>
+      <div class="chat-thread">
+        <% messages.forEach(function(m){ %>
+          <div class="msg <%= m.sender === 'buyer' ? 'mine' : 'them' %>">
+            <span class="who"><%= m.sender === 'seller' ? seller.display_name : 'You' %></span>
+            <p><%= m.body %></p>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="muted">Have a question? Send <%= seller.display_name %> a message — no account needed.</p>
+    <% } %>
+    <form action="/messages/start" method="post" class="chat-form">
+      <input type="hidden" name="seller_id" value="<%= seller.id %>">
+      <% if (!user && !conv) { %>
+        <input type="text" name="name" maxlength="60" placeholder="Your name (optional)">
+      <% } %>
+      <textarea name="body" rows="2" maxlength="2000" placeholder="Write a message…" required></textarea>
+      <button class="btn" type="submit">Send</button>
+    </form>
+    <% if (conv && !user) { %>
+      <p class="hint">💡 Reopen this store page anytime to see replies, or bookmark your <a href="/messages/<%= conv.id %>?t=<%= conv.access_token %>">private chat link</a>.</p>
+    <% } %>
+  <% } %>
+</div>
+
 <p style="margin-top:24px;"><a href="/" class="muted">← Browse all listings</a></p>

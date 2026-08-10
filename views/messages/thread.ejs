@@ -1,0 +1,26 @@
+<p style="margin-top:18px;"><a href="/messages" class="muted">← All messages</a></p>
+
+<div class="form-card">
+  <h1 style="margin-top:0;margin-bottom:2px;"><%= isSeller ? (conv.buyer_name || 'Buyer') : conv.seller_name %></h1>
+  <p class="page-sub" style="margin-top:0;">
+    <% if (isSeller) { %>Buyer<% } else { %>Seller · <a href="/store/<%= conv.seller_id %>">view store</a><% } %>
+  </p>
+
+  <div class="chat-thread big">
+    <% if (messages.length === 0) { %>
+      <p class="muted">No messages yet — say hello 👋</p>
+    <% } %>
+    <% messages.forEach(function(m){ %>
+      <% var mine = (m.sender === (isSeller ? 'seller' : 'buyer')); %>
+      <div class="msg <%= mine ? 'mine' : 'them' %>">
+        <span class="who"><%= mine ? 'You' : (isSeller ? (conv.buyer_name || 'Buyer') : conv.seller_name) %></span>
+        <p><%= m.body %></p>
+      </div>
+    <% }); %>
+  </div>
+
+  <form action="/messages/<%= conv.id %>/reply<%= tokenSuffix %>" method="post" class="chat-form">
+    <textarea name="body" rows="2" maxlength="2000" placeholder="Write a reply…" required></textarea>
+    <button class="btn" type="submit">Send</button>
+  </form>
+</div>

@@ -18,6 +18,7 @@
             <a href="/seller" class="<%= currentPath.startsWith('/seller') ? 'active' : '' %>">Sell</a>
           <% } %>
           <a href="/orders">My orders</a>
+          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages</a>
           <% if (user.role === 'admin') { %>
             <a href="/admin" class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>">Admin</a>
           <% } %>
@@ -26,6 +27,7 @@
             <button class="btn ghost small" type="submit">Log out</button>
           </form>
         <% } else { %>
+          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages</a>
           <a href="/login">Log in</a>
           <a href="/start-selling" class="btn small cta">Start selling</a>
         <% } %>
