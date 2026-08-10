@@ -84,5 +84,19 @@
     </ul>
   <% } %>
 
-  <p style="margin-top:14px;"><a href="/seller" class="muted">← Back to dashboard</a></p>
+  <% if (isEdit) { %>
+    <hr style="border:none;border-top:1px solid var(--line);margin:24px 0 16px;">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <strong>Delete this listing</strong>
+        <p class="hint" style="margin:2px 0 0;">Permanently removes the listing and its photos/files. This can't be undone.</p>
+      </div>
+      <form action="/seller/<%= product.id %>/delete" method="post"
+            onsubmit="return confirm('Delete this listing permanently? This cannot be undone.');">
+        <button class="btn danger" type="submit">Delete listing</button>
+      </form>
+    </div>
+  <% } %>
+
+  <p style="margin-top:18px;"><a href="/seller" class="muted">← Back to dashboard</a></p>
 </div>
