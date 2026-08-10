@@ -37,10 +37,11 @@
     </div>
   </header>
 
+  <% if (flash) { %>
+    <div class="flash-toast flash <%= flash.type %>" id="flashToast" onclick="this.remove()"><%= flash.msg %></div>
+  <% } %>
+
   <main class="container">
-    <% if (flash) { %>
-      <div class="flash <%= flash.type %>"><%= flash.msg %></div>
-    <% } %>
     <%- body %>
   </main>
 
@@ -53,6 +54,17 @@
     </div>
   </footer>
 
+  <script>
+    // Auto-dismiss the flash toast so a save confirmation is seen even when scrolled.
+    (function () {
+      var ft = document.getElementById('flashToast');
+      if (!ft) return;
+      setTimeout(function () {
+        ft.classList.add('hide');
+        setTimeout(function () { if (ft.parentNode) ft.remove(); }, 400);
+      }, 4500);
+    })();
+  </script>
   <script>
     // Copy-link buttons (used by the Share widgets).
     document.addEventListener('click', function (e) {
