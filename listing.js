@@ -1,6 +1,18 @@
 // Shared helpers for saving a listing's preview images + delivery files.
 const db = require('./db');
-const { uploadImage, uploadDeliverable, blurBuffer, fetchImageBytes, deleteImage } = require('./storage');
+const { uploadImage, uploadDeliverable, deleteImage, makeBlurredPreview } = require('./storage');
+
+async function insertDeliverable(productId, clear, pos) {
+  await db.run(
+    'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
+    productId,
+    clear.storage,
+    clear.ref,
+    clear.resource_type,
+    clear.original_name,
+    pos
+  );
+}
 
 // Save preview images. When `blur` is on, each photo is stored blurred as the
 // public preview AND its clear original is added as a paywalled deliverable.
@@ -10,25 +22,15 @@ async function saveImages(files, productId, blur, imgStart = 0, delStart = 0) {
   let dpos = delStart;
   for (const f of files || []) {
     if (blur) {
-      const blurred = await blurBuffer(f.buffer);
-      const img = await uploadImage(blurred, 'preview.jpg');
+      const { preview, clear } = await makeBlurredPreview({ buffer: f.buffer }, f.originalname);
       await db.run(
         'INSERT INTO product_images (product_id, url, public_id, blurred, position) VALUES (?, ?, ?, 1, ?)',
         productId,
-        img.url,
-        img.public_id,
+        preview.url,
+        preview.public_id,
         ipos++
       );
-      const d = await uploadDeliverable(f.buffer, f.originalname);
-      await db.run(
-        'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
-        productId,
-        d.storage,
-        d.ref,
-        d.resource_type,
-        d.original_name,
-        dpos++
-      );
+      await insertDeliverable(productId, clear, dpos++);
     } else {
       const img = await uploadImage(f.buffer, f.originalname);
       await db.run(
@@ -48,15 +50,7 @@ async function saveDeliverables(files, productId, startPos = 0) {
   let pos = startPos;
   for (const f of files || []) {
     const d = await uploadDeliverable(f.buffer, f.originalname);
-    await db.run(
-      'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
-      productId,
-      d.storage,
-      d.ref,
-      d.resource_type,
-      d.original_name,
-      pos++
-    );
+    await insertDeliverable(productId, d, pos++);
   }
   return pos;
 }
@@ -74,26 +68,15 @@ async function applyBlurToExisting(productId) {
     Number((await db.get('SELECT COALESCE(MAX(position), -1) AS m FROM deliverables WHERE product_id = ?', productId)).m) + 1;
   let done = 0;
   for (const im of imgs) {
-    let bytes;
+    let result;
     try {
-      bytes = await fetchImageBytes(im); // the clear original (this preview is still clear)
+      result = await makeBlurredPreview({ url: im.url }, 'photo.jpg');
     } catch (e) {
-      continue; // can't fetch — leave it as-is
+      continue; // couldn't process this one — leave it as-is
     }
-    const blurredBuf = await blurBuffer(bytes);
-    const newImg = await uploadImage(blurredBuf, 'preview.jpg');
-    const d = await uploadDeliverable(bytes, 'photo.jpg');
-    await db.run(
-      'INSERT INTO deliverables (product_id, storage, ref, resource_type, original_name, position) VALUES (?, ?, ?, ?, ?, ?)',
-      productId,
-      d.storage,
-      d.ref,
-      d.resource_type,
-      d.original_name,
-      dpos++
-    );
+    await insertDeliverable(productId, result.clear, dpos++);
     const old = { url: im.url, public_id: im.public_id };
-    await db.run('UPDATE product_images SET url = ?, public_id = ?, blurred = 1 WHERE id = ?', newImg.url, newImg.public_id, im.id);
+    await db.run('UPDATE product_images SET url = ?, public_id = ?, blurred = 1 WHERE id = ?', result.preview.url, result.preview.public_id, im.id);
     await deleteImage(old);
     done++;
   }

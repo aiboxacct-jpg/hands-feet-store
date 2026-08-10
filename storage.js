@@ -46,6 +46,47 @@ function uploadImage(buffer, originalName) {
   return Promise.resolve({ url: '/uploads/' + filename, public_id: null });
 }
 
+// Create a blurred public preview + keep the clear original private, from a
+// source that is either { buffer } or { url } (an existing image).
+// PRODUCTION (Cloudinary): the blur is done on Cloudinary's servers via a signed
+// transformation — no heavy image processing in this app (avoids out-of-memory).
+// LOCAL (disk): uses jimp.
+// Returns { preview: { url, public_id }, clear: { storage, ref, resource_type, original_name } }.
+async function makeBlurredPreview(source, originalName) {
+  const name = originalName || 'photo.jpg';
+  if (useCloudinary) {
+    // 1) store the clear image as an authenticated (private) asset — Cloudinary
+    //    fetches it directly when given a URL, so we never load it into memory.
+    const clearUp = await new Promise((resolve, reject) => {
+      const opts = { folder: 'store_clear', type: 'authenticated', resource_type: 'image' };
+      if (source.buffer) {
+        const stream = cloudinary.uploader.upload_stream(opts, (e, r) => (e ? reject(e) : resolve(r)));
+        stream.end(source.buffer);
+      } else {
+        cloudinary.uploader.upload(source.url, opts, (e, r) => (e ? reject(e) : resolve(r)));
+      }
+    });
+    // 2) the public preview is a permanent SIGNED, blurred transformation URL.
+    const blurUrl = cloudinary.url(clearUp.public_id, {
+      type: 'authenticated',
+      resource_type: 'image',
+      secure: true,
+      sign_url: true,
+      transformation: [{ effect: 'blur:2000', quality: 'auto' }],
+    });
+    return {
+      preview: { url: blurUrl, public_id: clearUp.public_id },
+      clear: { storage: 'cloudinary', ref: clearUp.public_id, resource_type: 'image', original_name: name },
+    };
+  }
+  // Local disk: blur with jimp (dev only, small scale).
+  const bytes = source.buffer || fs.readFileSync(path.join(UPLOAD_DIR, path.basename(source.url)));
+  const blurredBuf = await blurBuffer(bytes);
+  const preview = await uploadImage(blurredBuf, 'preview.jpg');
+  const clear = await uploadDeliverable(bytes, name);
+  return { preview, clear };
+}
+
 // Read the raw bytes of a stored preview image (local file or remote URL).
 async function fetchImageBytes(image) {
   if (image.url && image.url.startsWith('/uploads/')) {
@@ -141,6 +182,7 @@ module.exports = {
   deleteImage,
   fetchImageBytes,
   blurBuffer,
+  makeBlurredPreview,
   uploadDeliverable,
   deliverableUrl,
   deliverableDiskPath,
