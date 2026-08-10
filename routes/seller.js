@@ -179,11 +179,14 @@ router.post('/:id/edit', upload, async (req, res) => {
   );
   await listing.saveDeliverables(filesOf(req, 'deliverables'), product.id, nextDel);
 
-  // If blur is on, also blur any existing clear photos (deliver their originals).
+  // Sync existing photos to the blur setting: blur them (on) or restore clear (off).
   let extra = '';
   if (blur) {
     const converted = await listing.applyBlurToExisting(product.id);
-    if (converted) extra = ' ' + converted + ' existing photo' + (converted > 1 ? 's were' : ' was') + ' blurred — the clear original' + (converted > 1 ? 's are' : ' is') + ' now in delivery files.';
+    if (converted) extra = ' ' + converted + ' photo' + (converted > 1 ? 's were' : ' was') + ' blurred — the clear original' + (converted > 1 ? 's are' : ' is') + ' now in delivery files.';
+  } else {
+    const restored = await listing.applyUnblur(product.id);
+    if (restored) extra = ' ' + restored + ' photo' + (restored > 1 ? 's were' : ' was') + ' restored to clear.';
   }
   flash(req, 'success', '✓ Changes saved.' + extra);
   res.redirect('/seller/' + product.id + '/edit');

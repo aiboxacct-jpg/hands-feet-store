@@ -87,6 +87,26 @@ async function makeBlurredPreview(source, originalName) {
   return { preview, clear };
 }
 
+// Restore a clear public preview from the tracked clear original, for un-blur.
+// image needs { clear_ref, clear_storage, url, public_id }. Returns { url, public_id }.
+async function restoreClearPreview(image) {
+  if (image.clear_storage === 'cloudinary') {
+    // The clear is the authenticated asset (public_id === clear_ref). Show it via a
+    // permanent signed URL (blur is off, so the seller wants it visible).
+    const url = cloudinary.url(image.clear_ref, {
+      type: 'authenticated',
+      resource_type: 'image',
+      secure: true,
+      sign_url: true,
+    });
+    return { url, public_id: image.clear_ref, sharedAsset: true };
+  }
+  // disk: the clear original lives in the deliverables dir — re-publish it.
+  const bytes = fs.readFileSync(path.join(DELIVERABLES_DIR, image.clear_ref));
+  const pub = await uploadImage(bytes, 'clear.jpg');
+  return { url: pub.url, public_id: pub.public_id, sharedAsset: false };
+}
+
 // Read the raw bytes of a stored preview image (local file or remote URL).
 async function fetchImageBytes(image) {
   if (image.url && image.url.startsWith('/uploads/')) {
@@ -183,6 +203,7 @@ module.exports = {
   fetchImageBytes,
   blurBuffer,
   makeBlurredPreview,
+  restoreClearPreview,
   uploadDeliverable,
   deliverableUrl,
   deliverableDiskPath,
