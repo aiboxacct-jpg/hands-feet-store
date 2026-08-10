@@ -77,6 +77,8 @@ app.use((req, res, next) => {
     req.path === '/login' ||
     req.path === '/register' ||
     req.path === '/start-selling' ||
+    req.path === '/privacy' ||
+    req.path === '/terms' ||
     req.path.startsWith('/public') ||
     req.path.startsWith('/uploads');
   if (req.session.ageConfirmed || exempt) return next();

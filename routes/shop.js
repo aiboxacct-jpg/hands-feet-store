@@ -57,6 +57,10 @@ router.get('/', async (req, res) => {
   });
 });
 
+// --- Legal pages ------------------------------------------------------------
+router.get('/privacy', (req, res) => res.render('privacy', { title: 'Privacy Policy' }));
+router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of Service' }));
+
 // --- Public seller storefront (the shareable "my store" link) ---------------
 router.get('/store/:id', async (req, res) => {
   const seller = await db.get('SELECT id, display_name, bio FROM users WHERE id = ?', req.params.id);
