@@ -40,47 +40,49 @@
       <input type="checkbox" name="blur_previews" value="1" style="width:auto;" <%= product && product.blur_previews ? 'checked' : '' %>>
       <span>🔒 Blur photos as previews — buyers get the clear originals after they pay</span>
     </label>
-    <p class="hint">When on, photos you upload here are shown blurred, and each original is delivered automatically once you mark an order paid. <% if (isEdit) { %>(Applies to photos you add now.)<% } %></p>
+    <p class="hint">When on, your photos are shown blurred and each clear original is delivered automatically once you mark an order paid — including photos already on this listing.</p>
 
     <label for="images">Preview photos <span class="muted" style="font-weight:400;">(public)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>
     <p class="hint">Up to 6 images. <% if (isEdit) { %>New uploads are added to the existing photos.<% } %></p>
 
-    <% if (isEdit && images && images.length) { %>
-      <label>Current photos</label>
-      <div class="gallery">
-        <% images.forEach(function(im){ %>
-          <div style="position:relative;">
-            <img src="<%= im.url %>">
-            <form action="/seller/<%= product.id %>/image/<%= im.id %>/delete" method="post"
-                  onsubmit="return confirm('Remove this photo?');" style="position:absolute;top:4px;right:4px;">
-              <button class="btn small danger" type="submit" style="padding:2px 7px;">×</button>
-            </form>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
-
     <label for="deliverables">Delivery files <span class="muted" style="font-weight:400;">(private — buyer downloads after paying)</span></label>
     <input type="file" id="deliverables" name="deliverables" multiple>
     <p class="hint">The real content the buyer receives. Unlocks for them once you mark their order paid. Up to 10 files, 50&nbsp;MB each.<% if (isEdit) { %> New uploads are added to the list below.<% } %></p>
 
-    <% if (isEdit && deliverables && deliverables.length) { %>
-      <label>Current delivery files</label>
-      <ul style="list-style:none;padding:0;margin:0;">
-        <% deliverables.forEach(function(d){ %>
-          <li style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">
-            <span style="flex:1;">🔒 <%= d.original_name %></span>
-            <form action="/seller/<%= product.id %>/deliverable/<%= d.id %>/delete" method="post"
-                  onsubmit="return confirm('Remove this delivery file?');">
-              <button class="btn small danger" type="submit">Remove</button>
-            </form>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
-
     <button class="btn" type="submit" style="width:100%; margin-top:18px;"><%= isEdit ? 'Save changes' : 'Publish listing' %></button>
   </form>
+
+  <%# Current media management lives OUTSIDE the main form (nested forms are invalid HTML). %>
+  <% if (isEdit && images && images.length) { %>
+    <h2 style="margin-top:24px;">Current photos</h2>
+    <div class="gallery">
+      <% images.forEach(function(im){ %>
+        <div style="position:relative;">
+          <img src="<%= im.url %>">
+          <form action="/seller/<%= product.id %>/image/<%= im.id %>/delete" method="post"
+                onsubmit="return confirm('Remove this photo?');" style="position:absolute;top:4px;right:4px;">
+            <button class="btn small danger" type="submit" style="padding:2px 7px;">×</button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <% if (isEdit && deliverables && deliverables.length) { %>
+    <h2 style="margin-top:24px;">Current delivery files</h2>
+    <ul style="list-style:none;padding:0;margin:0;">
+      <% deliverables.forEach(function(d){ %>
+        <li style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">
+          <span style="flex:1;">🔒 <%= d.original_name %></span>
+          <form action="/seller/<%= product.id %>/deliverable/<%= d.id %>/delete" method="post"
+                onsubmit="return confirm('Remove this delivery file?');">
+            <button class="btn small danger" type="submit">Remove</button>
+          </form>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+
   <p style="margin-top:14px;"><a href="/seller" class="muted">← Back to dashboard</a></p>
 </div>
