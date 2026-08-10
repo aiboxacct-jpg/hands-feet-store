@@ -29,7 +29,8 @@ router.get('/', async (req, res) => {
        JOIN users s ON s.id = o.seller_id
       ORDER BY o.created_at DESC LIMIT 10`
   );
-  res.render('admin/overview', { title: 'Admin', stats, recentOrders });
+  const chat = (await db.all('SELECT id, name, role, body, created_at FROM global_messages ORDER BY id DESC LIMIT 60')).reverse();
+  res.render('admin/overview', { title: 'Admin', stats, recentOrders, chat });
 });
 
 // --- Users ------------------------------------------------------------------
@@ -122,17 +123,6 @@ router.post('/orders/:id/status', async (req, res) => {
   const status = ['pending', 'paid', 'shipped', 'cancelled'].includes(req.body.status) ? req.body.status : null;
   if (status) await db.run('UPDATE orders SET status = ? WHERE id = ?', status, req.params.id);
   res.redirect('/admin/orders');
-});
-
-// --- Lounge (global chat) monitor -------------------------------------------
-router.get('/lounge', async (req, res) => {
-  const messages = await db.all('SELECT * FROM global_messages ORDER BY id DESC LIMIT 200');
-  res.render('admin/lounge', { title: 'Chat monitor', messages });
-});
-
-router.post('/lounge/:id/delete', async (req, res) => {
-  await db.run('DELETE FROM global_messages WHERE id = ?', req.params.id);
-  res.redirect('/admin/lounge');
 });
 
 module.exports = router;

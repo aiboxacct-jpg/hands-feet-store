@@ -233,6 +233,13 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
 .lounge-form input[type=text] { flex: 1; }
 .lounge-form .btn { flex: 0 0 auto; }
 
+/* Admin collapsible chat monitor */
+.admin-chat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 18px 0; overflow: hidden; }
+.admin-chat > summary { cursor: pointer; padding: 14px 18px; font-weight: 700; list-style: none; }
+.admin-chat > summary::-webkit-details-marker { display: none; }
+.admin-chat[open] > summary { border-bottom: 1px solid var(--line); }
+.admin-chat-body { padding: 12px 14px; }
+
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); margin-top: 48px; padding: 22px 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
 

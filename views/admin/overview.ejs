@@ -4,8 +4,32 @@
   <a class="chip" href="/admin/users">Users</a>
   <a class="chip" href="/admin/listings">Listings</a>
   <a class="chip" href="/admin/orders">Orders</a>
-  <a class="chip" href="/admin/lounge">Chat</a>
 </div>
+
+<details class="admin-chat" id="adminChat">
+  <summary>💬 Live chat monitor <span class="muted" style="font-weight:400;">— click to unfold</span></summary>
+  <div class="admin-chat-body">
+    <div id="adminChatMsgs" class="chat-thread big">
+      <% if (chat.length === 0) { %><p class="muted" id="adminChatEmpty">No chat messages yet.</p><% } %>
+      <% chat.forEach(function(m){ %>
+        <div class="lmsg" data-id="<%= m.id %>">
+          <div class="lmsg-head">
+            <span class="lmsg-name"><%= m.name %></span>
+            <% if (m.role === 'admin') { %><span class="ltag star" title="Admin">⭐</span><% } else if (m.role) { %><span class="ltag"><%= m.role %></span><% } %>
+            <span class="lmsg-time"><%= (m.created_at || '').slice(11,16) %></span>
+            <button type="button" class="lmsg-del" data-id="<%= m.id %>">✕</button>
+          </div>
+          <div class="lmsg-body"><%= m.body %></div>
+        </div>
+      <% }); %>
+    </div>
+    <form id="adminChatForm" class="chat-form">
+      <input type="text" id="adminChatBody" maxlength="500" placeholder="Reply as ⭐ admin…" autocomplete="off">
+      <button class="btn" type="submit">Send</button>
+    </form>
+    <p class="hint" style="margin:6px 0 0;">Live — updates while open. <a href="/lounge" target="_blank" rel="noopener">Open full Lounge ↗</a></p>
+  </div>
+</details>
 
 <div class="stat-row">
   <div class="stat"><div class="n"><%= stats.users %></div><div class="l">Users</div></div>
@@ -14,6 +38,60 @@
   <div class="stat"><div class="n"><%= stats.orders %></div><div class="l">Orders</div></div>
   <div class="stat"><div class="n"><%= money(stats.revenue) %></div><div class="l">Confirmed sales</div></div>
 </div>
+
+<script>
+(function () {
+  var det = document.getElementById('adminChat');
+  var box = document.getElementById('adminChatMsgs');
+  var form = document.getElementById('adminChatForm');
+  var input = document.getElementById('adminChatBody');
+  var empty = document.getElementById('adminChatEmpty');
+  var lastId = <%= chat.length ? chat[chat.length - 1].id : 0 %>;
+  var timer = null, atBottom = true;
+
+  box.addEventListener('scroll', function () { atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40; });
+  function scrollDown() { if (atBottom) box.scrollTop = box.scrollHeight; }
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function add(m) {
+    if (empty) { empty.remove(); empty = null; }
+    if (box.querySelector('.lmsg[data-id="' + m.id + '"]')) return;
+    var w = el('div', 'lmsg'); w.setAttribute('data-id', m.id);
+    var h = el('div', 'lmsg-head');
+    h.appendChild(el('span', 'lmsg-name', m.name));
+    if (m.role === 'admin') { var s = el('span', 'ltag star', '⭐'); s.title = 'Admin'; h.appendChild(s); }
+    else if (m.role) h.appendChild(el('span', 'ltag', m.role));
+    h.appendChild(el('span', 'lmsg-time', (m.created_at || '').slice(11, 16)));
+    var d = el('button', 'lmsg-del', '✕'); d.type = 'button'; d.setAttribute('data-id', m.id); h.appendChild(d);
+    w.appendChild(h); w.appendChild(el('div', 'lmsg-body', m.body));
+    box.appendChild(w);
+    if (m.id > lastId) lastId = m.id;
+  }
+  async function poll() {
+    try {
+      var r = await fetch('/lounge/feed?after=' + lastId, { headers: { accept: 'application/json' } });
+      var data = await r.json();
+      if (data.messages && data.messages.length) { data.messages.forEach(add); scrollDown(); }
+    } catch (e) {}
+  }
+  det.addEventListener('toggle', function () {
+    if (det.open) { scrollDown(); poll(); timer = setInterval(poll, 5000); }
+    else if (timer) { clearInterval(timer); timer = null; }
+  });
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var body = input.value.trim(); if (!body) return; input.value = '';
+    try {
+      var r = await fetch('/lounge', { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ body: body }) });
+      var data = await r.json(); if (data.ok && data.message) { atBottom = true; add(data.message); scrollDown(); }
+    } catch (e) {}
+  });
+  box.addEventListener('click', async function (e) {
+    var b = e.target.closest('.lmsg-del'); if (!b) return;
+    var id = b.getAttribute('data-id');
+    try { await fetch('/lounge/' + id + '/delete', { method: 'POST', headers: { accept: 'application/json' } }); var n = box.querySelector('.lmsg[data-id="' + id + '"]'); if (n) n.remove(); } catch (e) {}
+  });
+})();
+</script>
 
 <h2>Recent orders</h2>
 <% if (recentOrders.length === 0) { %>
