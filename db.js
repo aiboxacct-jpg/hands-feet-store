@@ -67,6 +67,16 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS global_messages (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  gid        TEXT,
+  name       TEXT NOT NULL,
+  role       TEXT,                    -- admin | seller | buyer | '' (guest)
+  body       TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS conversations (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   seller_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

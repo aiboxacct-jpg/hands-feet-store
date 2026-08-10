@@ -1,0 +1,114 @@
+<h1>💬 Lounge</h1>
+<p class="page-sub">Global chat — say hi to everyone. Be respectful; this is a public room (18+).</p>
+
+<div class="lounge-box">
+  <div id="lounge-msgs" class="lounge-msgs">
+    <% if (messages.length === 0) { %>
+      <p class="muted" id="lounge-empty">No messages yet — be the first to say something 👋</p>
+    <% } %>
+    <% messages.forEach(function(m){ %>
+      <div class="lmsg <%= m.mine ? 'mine' : '' %>" data-id="<%= m.id %>">
+        <div class="lmsg-head">
+          <span class="lmsg-name"><%= m.name %></span>
+          <% if (m.role === 'admin' || m.role === 'seller') { %><span class="ltag"><%= m.role %></span><% } %>
+          <span class="lmsg-time"><%= (m.created_at || '').slice(11,16) %></span>
+          <% if (isAdmin) { %><button type="button" class="lmsg-del" data-id="<%= m.id %>">✕</button><% } %>
+        </div>
+        <div class="lmsg-body"><%= m.body %></div>
+      </div>
+    <% }); %>
+  </div>
+
+  <form id="lounge-form" class="lounge-form" action="/lounge" method="post">
+    <% if (isGuest) { %>
+      <input type="text" id="lounge-name" name="name" maxlength="30" value="<%= suggestedName %>" placeholder="Your name" style="flex:0 0 130px;">
+    <% } %>
+    <input type="text" id="lounge-body" name="body" maxlength="500" placeholder="Type a message…" autocomplete="off" required>
+    <button class="btn" type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var box = document.getElementById('lounge-msgs');
+  var form = document.getElementById('lounge-form');
+  var input = document.getElementById('lounge-body');
+  var nameInput = document.getElementById('lounge-name');
+  var empty = document.getElementById('lounge-empty');
+  var isAdmin = <%= isAdmin ? 'true' : 'false' %>;
+  var lastId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
+  var atBottom = true;
+
+  box.addEventListener('scroll', function () {
+    atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  });
+  function scrollIfNeeded() { if (atBottom) box.scrollTop = box.scrollHeight; }
+  scrollIfNeeded();
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text; // textContent => XSS-safe
+    return e;
+  }
+  function addMessage(m) {
+    if (empty) { empty.remove(); empty = null; }
+    if (box.querySelector('.lmsg[data-id="' + m.id + '"]')) return;
+    var wrap = el('div', 'lmsg' + (m.mine ? ' mine' : ''));
+    wrap.setAttribute('data-id', m.id);
+    var head = el('div', 'lmsg-head');
+    head.appendChild(el('span', 'lmsg-name', m.name));
+    if (m.role === 'admin' || m.role === 'seller') head.appendChild(el('span', 'ltag', m.role));
+    head.appendChild(el('span', 'lmsg-time', (m.created_at || '').slice(11, 16)));
+    if (isAdmin) {
+      var d = el('button', 'lmsg-del', '✕');
+      d.type = 'button';
+      d.setAttribute('data-id', m.id);
+      head.appendChild(d);
+    }
+    wrap.appendChild(head);
+    wrap.appendChild(el('div', 'lmsg-body', m.body));
+    box.appendChild(wrap);
+    if (m.id > lastId) lastId = m.id;
+  }
+
+  async function poll() {
+    try {
+      var r = await fetch('/lounge/feed?after=' + lastId, { headers: { accept: 'application/json' } });
+      var data = await r.json();
+      if (data.messages && data.messages.length) { data.messages.forEach(addMessage); scrollIfNeeded(); }
+    } catch (e) {}
+  }
+  setInterval(poll, 5000);
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var body = input.value.trim();
+    if (!body) return;
+    var params = new URLSearchParams();
+    params.set('body', body);
+    if (nameInput) params.set('name', nameInput.value);
+    input.value = '';
+    try {
+      var r = await fetch('/lounge', {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded' },
+        body: params,
+      });
+      var data = await r.json();
+      if (data.ok && data.message) { atBottom = true; addMessage(data.message); scrollIfNeeded(); }
+    } catch (e) {}
+  });
+
+  box.addEventListener('click', async function (e) {
+    var b = e.target.closest('.lmsg-del');
+    if (!b) return;
+    var id = b.getAttribute('data-id');
+    try {
+      await fetch('/lounge/' + id + '/delete', { method: 'POST', headers: { accept: 'application/json' } });
+      var node = box.querySelector('.lmsg[data-id="' + id + '"]');
+      if (node) node.remove();
+    } catch (e) {}
+  });
+})();
+</script>

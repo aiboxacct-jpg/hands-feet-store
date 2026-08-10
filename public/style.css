@@ -216,6 +216,22 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
 .msg-row:hover { text-decoration: none; border-color: var(--brand); }
 .msg-row-top { display: flex; align-items: center; gap: 8px; }
 
+/* Lounge (global chat) */
+.lounge-box { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin: 18px 0; }
+.lounge-msgs { height: 52vh; min-height: 320px; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.lmsg { max-width: 82%; align-self: flex-start; }
+.lmsg.mine { align-self: flex-end; text-align: right; }
+.lmsg-head { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--muted); }
+.lmsg.mine .lmsg-head { flex-direction: row-reverse; }
+.lmsg-name { font-weight: 700; color: var(--ink); }
+.ltag { text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.04em; background: #efeafc; color: var(--accent); padding: 1px 6px; border-radius: 6px; font-weight: 700; }
+.lmsg-del { border: none; background: none; color: var(--danger); cursor: pointer; font-size: 0.75rem; padding: 0 2px; }
+.lmsg-body { display: inline-block; background: #f1eef0; padding: 7px 12px; border-radius: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.lmsg.mine .lmsg-body { background: #efeafc; }
+.lounge-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: #faf7f9; }
+.lounge-form input[type=text] { flex: 1; }
+.lounge-form .btn { flex: 0 0 auto; }
+
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); margin-top: 48px; padding: 22px 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
 

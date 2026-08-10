@@ -13,6 +13,7 @@
       <a class="brand" href="/"><%= storeName %></a>
       <nav class="nav">
         <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Browse</a>
+        <a href="/lounge" class="<%= currentPath.startsWith('/lounge') ? 'active' : '' %>">Lounge</a>
         <% if (user) { %>
           <% if (user.role === 'seller' || user.role === 'admin') { %>
             <a href="/seller" class="<%= currentPath.startsWith('/seller') ? 'active' : '' %>">Sell</a>
