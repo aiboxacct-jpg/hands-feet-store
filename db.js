@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS product_images (
   product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   url        TEXT NOT NULL,
   public_id  TEXT,
+  blurred    INTEGER NOT NULL DEFAULT 0,   -- 1 = this public preview is already blurred
   position   INTEGER NOT NULL DEFAULT 0
 );
 
@@ -175,7 +176,10 @@ async function seedAdmin() {
 
 // Idempotent column additions for databases created before a column existed.
 async function migrate() {
-  const stmts = ['ALTER TABLE products ADD COLUMN blur_previews INTEGER NOT NULL DEFAULT 0'];
+  const stmts = [
+    'ALTER TABLE products ADD COLUMN blur_previews INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE product_images ADD COLUMN blurred INTEGER NOT NULL DEFAULT 0',
+  ];
   for (const sql of stmts) {
     try {
       await backend.exec(sql);

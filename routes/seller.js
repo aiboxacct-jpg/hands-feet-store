@@ -179,8 +179,14 @@ router.post('/:id/edit', upload, async (req, res) => {
   );
   await listing.saveDeliverables(filesOf(req, 'deliverables'), product.id, nextDel);
 
-  flash(req, 'success', 'Listing updated.');
-  res.redirect('/seller');
+  // If blur is on, also blur any existing clear photos (deliver their originals).
+  let extra = '';
+  if (blur) {
+    const converted = await listing.applyBlurToExisting(product.id);
+    if (converted) extra = ' ' + converted + ' existing photo' + (converted > 1 ? 's were' : ' was') + ' blurred — the clear original' + (converted > 1 ? 's are' : ' is') + ' now in delivery files.';
+  }
+  flash(req, 'success', '✓ Changes saved.' + extra);
+  res.redirect('/seller/' + product.id + '/edit');
 });
 
 // --- Delete an image --------------------------------------------------------

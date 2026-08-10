@@ -46,6 +46,16 @@ function uploadImage(buffer, originalName) {
   return Promise.resolve({ url: '/uploads/' + filename, public_id: null });
 }
 
+// Read the raw bytes of a stored preview image (local file or remote URL).
+async function fetchImageBytes(image) {
+  if (image.url && image.url.startsWith('/uploads/')) {
+    return fs.readFileSync(path.join(UPLOAD_DIR, path.basename(image.url)));
+  }
+  const res = await fetch(image.url);
+  if (!res.ok) throw new Error('Could not fetch image: ' + res.status);
+  return Buffer.from(await res.arrayBuffer());
+}
+
 async function deleteImage(image) {
   if (!image) return;
   if (useCloudinary) {
@@ -129,6 +139,7 @@ async function deleteDeliverable(d) {
 module.exports = {
   uploadImage,
   deleteImage,
+  fetchImageBytes,
   blurBuffer,
   uploadDeliverable,
   deliverableUrl,
