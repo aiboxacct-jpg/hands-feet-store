@@ -10,6 +10,21 @@
   </div>
 <% } %>
 
+<% if (locked) { %>
+  <div class="flash error" style="margin-top:16px;">
+    🔒 <strong>Your account is locked.</strong> You owe <strong><%= money(owed) %></strong> in platform fees, so your listings are hidden and you can't post new ones until it's paid.
+    <% if (platformHandle) { %> Send payment to <strong><%= platformHandle %></strong>, then it'll be cleared.<% } else { %> Please contact the site owner to settle up.<% } %>
+  </div>
+<% } %>
+
+<div class="stat-row" style="margin-top:16px;">
+  <div class="stat"><div class="n"><%= cutPercent %>%</div><div class="l">Site fee per sale</div></div>
+  <div class="stat">
+    <div class="n" style="<%= owed > 0 ? 'color:var(--danger);' : '' %>"><%= money(owed) %></div>
+    <div class="l">Your current bill<% if (owed > 0 && platformHandle) { %> · pay to <%= platformHandle %><% } %></div>
+  </div>
+</div>
+
 <% var storeUrl = absUrl('/store/' + user.id); %>
 <div class="share-box">
   <h2>📣 Share your store — this is how buyers find you</h2>
@@ -59,7 +74,7 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>#</th><th>Item</th><th>Buyer</th><th>Amount</th><th>Pay</th><th>Status</th><th>Update</th></tr>
+        <tr><th>#</th><th>Item</th><th>Buyer</th><th>Amount</th><th>Site Revenue</th><th>Pay</th><th>Status</th><th>Update</th></tr>
       </thead>
       <tbody>
         <% sales.forEach(function(o){ %>
@@ -68,6 +83,7 @@
             <td><%= o.title %></td>
             <td><%= o.buyer_name %></td>
             <td><%= money(o.amount_cents) %></td>
+            <td class="muted"><%= (o.status === 'paid' || o.status === 'shipped') ? money(o.fee_cents) : '—' %></td>
             <td><%= o.payment_method %></td>
             <td><span class="badge <%= o.status %>"><%= o.status %></span></td>
             <td>

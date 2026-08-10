@@ -3,6 +3,7 @@ const express = require('express');
 const db = require('../db');
 const { requireRole } = require('../middleware');
 const { deleteImage, deleteDeliverable } = require('../storage');
+const billing = require('../billing');
 
 const router = express.Router();
 
@@ -20,6 +21,8 @@ router.get('/', async (req, res) => {
     listings: (await db.get('SELECT COUNT(*) AS c FROM products')).c,
     orders: (await db.get('SELECT COUNT(*) AS c FROM orders')).c,
     revenue: (await db.get("SELECT COALESCE(SUM(amount_cents),0) AS s FROM orders WHERE status IN ('paid','shipped')")).s,
+    siteRevenue: (await db.get("SELECT COALESCE(SUM(fee_cents),0) AS s FROM orders WHERE status IN ('paid','shipped')")).s,
+    outstanding: (await db.get("SELECT COALESCE(SUM(fee_cents),0) AS s FROM orders WHERE status IN ('paid','shipped') AND fee_paid = 0")).s,
   };
   const recentOrders = await db.all(
     `SELECT o.*, p.title, COALESCE(b.display_name, o.contact, 'Guest') AS buyer_name, s.display_name AS seller_name
@@ -121,8 +124,56 @@ router.get('/orders', async (req, res) => {
 
 router.post('/orders/:id/status', async (req, res) => {
   const status = ['pending', 'paid', 'shipped', 'cancelled'].includes(req.body.status) ? req.body.status : null;
-  if (status) await db.run('UPDATE orders SET status = ? WHERE id = ?', status, req.params.id);
+  if (status) {
+    const order = await db.get('SELECT * FROM orders WHERE id = ?', req.params.id);
+    if (order) {
+      await db.run('UPDATE orders SET status = ? WHERE id = ?', status, order.id);
+      if (status === 'paid' || status === 'shipped') await billing.onOrderPaid({ ...order, status });
+      else await billing.recomputeLock(order.seller_id);
+    }
+  }
   res.redirect('/admin/orders');
+});
+
+// --- Billing / platform commission -----------------------------------------
+router.get('/billing', async (req, res) => {
+  const s = billing.settings();
+  // Per-seller balances (owed = unpaid; collected = already settled).
+  const sellers = await db.all(
+    `SELECT u.id, u.display_name, u.email, u.locked,
+            COALESCE(SUM(CASE WHEN o.status IN ('paid','shipped') AND o.fee_paid = 0 THEN o.fee_cents ELSE 0 END), 0) AS owed,
+            COALESCE(SUM(CASE WHEN o.status IN ('paid','shipped') AND o.fee_paid = 1 THEN o.fee_cents ELSE 0 END), 0) AS collected
+       FROM users u
+       LEFT JOIN orders o ON o.seller_id = u.id
+      WHERE u.role IN ('seller','admin')
+      GROUP BY u.id
+      ORDER BY owed DESC, u.display_name`
+  );
+  res.render('admin/billing', {
+    title: 'Billing',
+    cutPercent: s.site_cut_percent,
+    thresholdCents: s.lockout_threshold_cents,
+    platformHandle: s.platform_handle,
+    sellers,
+  });
+});
+
+router.post('/billing/settings', async (req, res) => {
+  const cut = Math.max(0, parseFloat(String(req.body.site_cut_percent).replace(/[^0-9.]/g, '')) || 0);
+  const thresholdDollars = Math.max(0, parseFloat(String(req.body.lockout_threshold).replace(/[^0-9.]/g, '')) || 0);
+  const handle = String(req.body.platform_handle || '').trim();
+  await billing.setSetting('site_cut_percent', cut);
+  await billing.setSetting('lockout_threshold_cents', Math.round(thresholdDollars * 100));
+  await billing.setSetting('platform_handle', handle);
+  await billing.recomputeAllLocks(); // threshold may have changed
+  flash(req, 'success', 'Billing settings updated.');
+  res.redirect('/admin/billing');
+});
+
+router.post('/billing/:sellerId/settle', async (req, res) => {
+  await billing.settleSeller(req.params.sellerId);
+  flash(req, 'success', 'Marked the bill as paid — seller unlocked.');
+  res.redirect('/admin/billing');
 });
 
 module.exports = router;

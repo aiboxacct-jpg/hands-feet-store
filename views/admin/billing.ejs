@@ -1,0 +1,54 @@
+<h1>Billing</h1>
+<div class="chips">
+  <a class="chip" href="/admin">Overview</a>
+  <a class="chip" href="/admin/users">Users</a>
+  <a class="chip" href="/admin/listings">Listings</a>
+  <a class="chip" href="/admin/orders">Orders</a>
+  <a class="chip active" href="/admin/billing">Billing</a>
+</div>
+
+<div class="form-card" style="max-width:640px;margin:16px 0;">
+  <h2 style="margin-top:0;">Commission settings</h2>
+  <form action="/admin/billing/settings" method="post">
+    <label for="site_cut_percent">Site cut per sale (%)</label>
+    <input type="text" id="site_cut_percent" name="site_cut_percent" value="<%= cutPercent %>">
+    <p class="hint">Taken from each order the seller marks paid, added to their bill.</p>
+
+    <label for="lockout_threshold">Lock sellers when their bill reaches ($)</label>
+    <input type="text" id="lockout_threshold" name="lockout_threshold" value="<%= (thresholdCents / 100).toFixed(2) %>">
+    <p class="hint">At or above this unpaid amount, a seller's listings are hidden and they can't post until they pay. Set 0 to never auto-lock.</p>
+
+    <label for="platform_handle">Where sellers pay their bill (your handle)</label>
+    <input type="text" id="platform_handle" name="platform_handle" value="<%= platformHandle %>" placeholder="$yourcashtag or @venmo">
+
+    <button class="btn" type="submit" style="margin-top:14px;">Save settings</button>
+  </form>
+</div>
+
+<h2>Seller balances</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Seller</th><th>Owes now</th><th>Collected</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% if (sellers.length === 0) { %>
+        <tr><td colspan="5" class="muted">No sellers yet.</td></tr>
+      <% } %>
+      <% sellers.forEach(function(s){ %>
+        <tr>
+          <td><a href="/store/<%= s.id %>"><%= s.display_name %></a><br><span class="muted" style="font-size:.8rem;"><%= s.email %></span></td>
+          <td <%= s.owed > 0 ? 'style="color:var(--danger);font-weight:700;"' : '' %>><%= money(s.owed) %></td>
+          <td class="muted"><%= money(s.collected) %></td>
+          <td><% if (s.locked) { %><span class="badge hidden">locked</span><% } else { %><span class="badge active">ok</span><% } %></td>
+          <td>
+            <% if (s.owed > 0) { %>
+              <form action="/admin/billing/<%= s.id %>/settle" method="post" class="inline-form"
+                    onsubmit="return confirm('Mark this seller\'s bill as paid and unlock them?');">
+                <button class="btn small" type="submit">Mark bill paid</button>
+              </form>
+            <% } else { %><span class="muted">—</span><% } %>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>

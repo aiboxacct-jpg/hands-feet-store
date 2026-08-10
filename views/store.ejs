@@ -2,9 +2,13 @@
 
 <div style="margin-top:20px;">
   <h1 style="margin-bottom:2px;"><%= seller.display_name %></h1>
-  <p class="muted" style="margin-top:0;"><%= products.length %> item<%= products.length === 1 ? '' : 's' %> for sale</p>
+  <% if (!seller.locked) { %><p class="muted" style="margin-top:0;"><%= products.length %> item<%= products.length === 1 ? '' : 's' %> for sale</p><% } %>
   <% if (seller.bio) { %><p style="white-space:pre-wrap;max-width:640px;"><%= seller.bio %></p><% } %>
 </div>
+
+<% if (seller.locked) { %>
+  <div class="empty"><p>This shop is temporarily unavailable.</p></div>
+<% } %>
 
 <% if (user && user.id === seller.id) { %>
   <div class="share-box">
@@ -20,9 +24,9 @@
   <%- include('partials/share', { shareUrl: storeUrl, shareTitle: seller.display_name + ' — shop my listings', label: 'Share this store:' }) %>
 <% } %>
 
-<% if (products.length === 0) { %>
+<% if (products.length === 0 && !seller.locked) { %>
   <div class="empty"><p>No items listed yet.</p></div>
-<% } else { %>
+<% } else if (!seller.locked) { %>
   <div class="grid">
     <% products.forEach(function(p){ %>
       <a class="card" href="/product/<%= p.id %>">

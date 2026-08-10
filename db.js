@@ -70,6 +70,11 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT
+);
+
 CREATE TABLE IF NOT EXISTS global_messages (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -183,6 +188,9 @@ async function migrate() {
     'ALTER TABLE product_images ADD COLUMN blurred INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE product_images ADD COLUMN clear_ref TEXT',
     'ALTER TABLE product_images ADD COLUMN clear_storage TEXT',
+    'ALTER TABLE orders ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE orders ADD COLUMN fee_paid INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN locked INTEGER NOT NULL DEFAULT 0',
   ];
   for (const sql of stmts) {
     try {
@@ -193,11 +201,20 @@ async function migrate() {
   }
 }
 
+async function seedSettings() {
+  const defaults = { site_cut_percent: '1', lockout_threshold_cents: '500', platform_handle: '' };
+  for (const [k, v] of Object.entries(defaults)) {
+    const existing = await backend.get('SELECT value FROM settings WHERE key = ?', k);
+    if (!existing) await backend.run('INSERT INTO settings (key, value) VALUES (?, ?)', k, v);
+  }
+}
+
 async function init() {
   backend = usingTurso ? await tursoBackend() : nodeSqliteBackend();
   await backend.exec(SCHEMA);
   await migrate();
   await seedAdmin();
+  await seedSettings();
   console.log('Database ready (' + (usingTurso ? 'Turso/libSQL' : 'local node:sqlite') + ').');
 }
 

@@ -8,6 +8,7 @@ const session = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 
 const db = require('./db');
+const billing = require('./billing');
 const { loadUser } = require('./middleware');
 
 const app = express();
@@ -121,6 +122,7 @@ app.use((err, req, res, next) => {
 });
 
 db.init()
+  .then(() => billing.loadSettings())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`\nStore running at  http://localhost:${PORT}\n`);

@@ -27,7 +27,9 @@
     <div class="price-big"><%= money(product.price_cents) %></div>
     <p class="muted">Sold by <a href="/store/<%= product.seller_id %>"><strong><%= product.seller_name %></strong></a></p>
 
-    <% if (product.status !== 'active') { %>
+    <% if (product.seller_locked) { %>
+      <p class="muted">This item is temporarily unavailable.</p>
+    <% } else if (product.status !== 'active') { %>
       <p><span class="badge <%= product.status %>"><%= product.status %></span> — not available for purchase.</p>
     <% } else { %>
       <% if (user && user.id === product.seller_id) { %>

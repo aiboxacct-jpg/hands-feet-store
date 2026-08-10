@@ -5,6 +5,7 @@ const db = require('../db');
 const { requireRole } = require('../middleware');
 const { deleteImage, deleteDeliverable } = require('../storage');
 const listing = require('../listing');
+const billing = require('../billing');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -50,6 +51,21 @@ async function attachThumb(products) {
 const filesOf = (req, field) => (req.files && req.files[field]) || [];
 const isBlurOn = (req) => req.body.blur_previews === 'on' || req.body.blur_previews === '1';
 
+// Locked sellers (unpaid bill over the threshold) can't create or edit listings.
+async function blockIfLocked(req, res, next) {
+  if (req.user.role !== 'admin' && req.user.locked) {
+    const owed = await billing.sellerBill(req.user.id);
+    return res.status(403).render('error', {
+      title: 'Account locked',
+      message:
+        'Your account is locked because you owe $' +
+        (owed / 100).toFixed(2) +
+        ' in platform fees. Go to your dashboard to pay your bill and unlock listing.',
+    });
+  }
+  next();
+}
+
 // --- Dashboard --------------------------------------------------------------
 router.get('/', async (req, res) => {
   const listings = await attachThumb(
@@ -65,15 +81,26 @@ router.get('/', async (req, res) => {
     req.user.id
   );
   const needsHandles = !req.user.cashapp && !req.user.venmo && !req.user.paypal;
-  res.render('seller/dashboard', { title: 'Seller dashboard', listings, sales, needsHandles });
+  const s = billing.settings();
+  const owed = await billing.sellerBill(req.user.id);
+  res.render('seller/dashboard', {
+    title: 'Seller dashboard',
+    listings,
+    sales,
+    needsHandles,
+    cutPercent: s.site_cut_percent,
+    platformHandle: s.platform_handle,
+    owed,
+    locked: !!req.user.locked,
+  });
 });
 
 // --- New listing ------------------------------------------------------------
-router.get('/new', (req, res) => {
+router.get('/new', blockIfLocked, (req, res) => {
   res.render('seller/edit', { title: 'New listing', product: null, images: [], deliverables: [], categories: CATEGORIES, error: null });
 });
 
-router.post('/new', upload, async (req, res) => {
+router.post('/new', blockIfLocked, upload, async (req, res) => {
   const title = String(req.body.title || '').trim();
   const description = String(req.body.description || '').trim();
   const category = CATEGORIES.includes(req.body.category) ? req.body.category : 'other';
@@ -117,7 +144,7 @@ async function ownProduct(req) {
 }
 
 // --- Edit listing -----------------------------------------------------------
-router.get('/:id/edit', async (req, res) => {
+router.get('/:id/edit', blockIfLocked, async (req, res) => {
   const product = await ownProduct(req);
   if (!product) return res.status(404).render('error', { title: 'Not found', message: 'Listing not found.' });
   const images = await db.all('SELECT * FROM product_images WHERE product_id = ? ORDER BY position, id', product.id);
@@ -132,7 +159,7 @@ router.get('/:id/edit', async (req, res) => {
   });
 });
 
-router.post('/:id/edit', upload, async (req, res) => {
+router.post('/:id/edit', blockIfLocked, upload, async (req, res) => {
   const product = await ownProduct(req);
   if (!product) {
     return res.status(404).render('error', { title: 'Not found', message: 'Listing not found.' });
@@ -237,6 +264,9 @@ router.post('/orders/:id/status', async (req, res) => {
   }
   const status = ['pending', 'paid', 'shipped', 'cancelled'].includes(req.body.status) ? req.body.status : order.status;
   await db.run('UPDATE orders SET status = ? WHERE id = ?', status, order.id);
+  // Record the platform fee when the order is confirmed paid; re-check the lock.
+  if (status === 'paid' || status === 'shipped') await billing.onOrderPaid({ ...order, status });
+  else await billing.recomputeLock(order.seller_id);
   flash(req, 'success', 'Order marked as ' + status + '.');
   res.redirect('/seller');
 });
