@@ -10,7 +10,7 @@
       <div class="lmsg <%= m.mine ? 'mine' : '' %>" data-id="<%= m.id %>">
         <div class="lmsg-head">
           <span class="lmsg-name"><%= m.name %></span>
-          <% if (m.role === 'admin' || m.role === 'seller') { %><span class="ltag"><%= m.role %></span><% } %>
+          <% if (m.role === 'admin') { %><span class="ltag star" title="Admin">⭐</span><% } else if (m.role === 'seller') { %><span class="ltag">seller</span><% } %>
           <span class="lmsg-time"><%= (m.created_at || '').slice(11,16) %></span>
           <% if (isAdmin) { %><button type="button" class="lmsg-del" data-id="<%= m.id %>">✕</button><% } %>
         </div>
@@ -58,7 +58,8 @@
     wrap.setAttribute('data-id', m.id);
     var head = el('div', 'lmsg-head');
     head.appendChild(el('span', 'lmsg-name', m.name));
-    if (m.role === 'admin' || m.role === 'seller') head.appendChild(el('span', 'ltag', m.role));
+    if (m.role === 'admin') { var st = el('span', 'ltag star', '⭐'); st.title = 'Admin'; head.appendChild(st); }
+    else if (m.role === 'seller') head.appendChild(el('span', 'ltag', 'seller'));
     head.appendChild(el('span', 'lmsg-time', (m.created_at || '').slice(11, 16)));
     if (isAdmin) {
       var d = el('button', 'lmsg-del', '✕');

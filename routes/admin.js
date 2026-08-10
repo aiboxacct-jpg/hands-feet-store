@@ -124,4 +124,15 @@ router.post('/orders/:id/status', async (req, res) => {
   res.redirect('/admin/orders');
 });
 
+// --- Lounge (global chat) monitor -------------------------------------------
+router.get('/lounge', async (req, res) => {
+  const messages = await db.all('SELECT * FROM global_messages ORDER BY id DESC LIMIT 200');
+  res.render('admin/lounge', { title: 'Chat monitor', messages });
+});
+
+router.post('/lounge/:id/delete', async (req, res) => {
+  await db.run('DELETE FROM global_messages WHERE id = ?', req.params.id);
+  res.redirect('/admin/lounge');
+});
+
 module.exports = router;
