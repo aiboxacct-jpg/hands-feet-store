@@ -3,6 +3,16 @@
   <p class="page-sub"><%= user.email %> · <span class="badge active"><%= user.role %></span></p>
   <% if (error) { %><div class="form-error"><%= error %></div><% } %>
 
+  <% if (user.role === 'seller' || user.role === 'admin') { %>
+    <% var storeUrl = absUrl('/store/' + user.id); %>
+    <label>Your store link <span class="muted" style="font-weight:400;">(share this anywhere)</span></label>
+    <div class="share-link">
+      <input type="text" readonly value="<%= storeUrl %>" onclick="this.select()">
+      <button type="button" class="btn small share-copy" data-url="<%= storeUrl %>">🔗 Copy</button>
+      <a class="btn small secondary" href="/store/<%= user.id %>" target="_blank" rel="noopener">View</a>
+    </div>
+  <% } %>
+
   <form action="/account" method="post">
     <label for="display_name">Display name</label>
     <input type="text" id="display_name" name="display_name" value="<%= user.display_name %>" required>
