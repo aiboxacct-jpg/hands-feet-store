@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   display_name  TEXT NOT NULL,
   role          TEXT NOT NULL DEFAULT 'buyer',
+  handle        TEXT,
   cashapp       TEXT,
   venmo         TEXT,
   paypal        TEXT,
@@ -191,6 +192,8 @@ async function migrate() {
     'ALTER TABLE orders ADD COLUMN fee_cents INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE orders ADD COLUMN fee_paid INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE users ADD COLUMN locked INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN handle TEXT',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle ON users(handle)',
   ];
   for (const sql of stmts) {
     try {
@@ -209,12 +212,23 @@ async function seedSettings() {
   }
 }
 
+// Give every user without a handle a unique URL-safe store handle.
+async function backfillHandles() {
+  const { uniqueHandle } = require('./slug');
+  const rows = await backend.all("SELECT id, display_name FROM users WHERE handle IS NULL OR handle = ''");
+  for (const u of rows) {
+    const h = await uniqueHandle((sql, ...a) => backend.get(sql, ...a), u.display_name, u.id);
+    await backend.run('UPDATE users SET handle = ? WHERE id = ?', h, u.id);
+  }
+}
+
 async function init() {
   backend = usingTurso ? await tursoBackend() : nodeSqliteBackend();
   await backend.exec(SCHEMA);
   await migrate();
   await seedAdmin();
   await seedSettings();
+  await backfillHandles();
   console.log('Database ready (' + (usingTurso ? 'Turso/libSQL' : 'local node:sqlite') + ').');
 }
 

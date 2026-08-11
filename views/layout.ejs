@@ -19,7 +19,7 @@
         <% if (user) { %>
           <% if (user.role === 'seller' || user.role === 'admin') { %>
             <a href="/seller" class="<%= currentPath.startsWith('/seller') ? 'active' : '' %>">Sell</a>
-            <a href="/store/<%= user.id %>">My store</a>
+            <a href="/store/<%= user.handle || user.id %>">My store</a>
           <% } %>
           <a href="/orders">My orders</a>
           <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages</a>

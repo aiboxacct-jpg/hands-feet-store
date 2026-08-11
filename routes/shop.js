@@ -63,7 +63,12 @@ router.get('/terms', (req, res) => res.render('terms', { title: 'Terms of Servic
 
 // --- Public seller storefront (the shareable "my store" link) ---------------
 router.get('/store/:id', async (req, res) => {
-  const seller = await db.get('SELECT id, display_name, bio, locked FROM users WHERE id = ?', req.params.id);
+  const param = req.params.id;
+  const cols = 'id, display_name, bio, locked, handle';
+  let seller = await db.get(`SELECT ${cols} FROM users WHERE handle = ?`, param);
+  if (!seller && /^\d+$/.test(param)) {
+    seller = await db.get(`SELECT ${cols} FROM users WHERE id = ?`, param);
+  }
   if (!seller) {
     return res.status(404).render('error', { title: 'Not found', message: 'That store does not exist.' });
   }
@@ -102,7 +107,7 @@ router.get('/store/:id', async (req, res) => {
 router.get('/product/:id', async (req, res) => {
   const product = await db.get(
     `SELECT p.*, u.display_name AS seller_name, u.bio AS seller_bio,
-            u.cashapp, u.venmo, u.paypal, u.locked AS seller_locked
+            u.cashapp, u.venmo, u.paypal, u.locked AS seller_locked, u.handle AS seller_handle
        FROM products p JOIN users u ON u.id = p.seller_id
       WHERE p.id = ?`,
     req.params.id

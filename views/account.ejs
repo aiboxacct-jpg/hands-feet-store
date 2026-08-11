@@ -4,12 +4,12 @@
   <% if (error) { %><div class="form-error"><%= error %></div><% } %>
 
   <% if (user.role === 'seller' || user.role === 'admin') { %>
-    <% var storeUrl = absUrl('/store/' + user.id); %>
+    <% var storeUrl = absUrl('/store/' + (user.handle || user.id)); %>
     <label>Your store link <span class="muted" style="font-weight:400;">(share this anywhere)</span></label>
     <div class="share-link">
       <input type="text" readonly value="<%= storeUrl %>" onclick="this.select()">
       <button type="button" class="btn small share-copy" data-url="<%= storeUrl %>">🔗 Copy</button>
-      <a class="btn small secondary" href="/store/<%= user.id %>" target="_blank" rel="noopener">View</a>
+      <a class="btn small secondary" href="/store/<%= user.handle || user.id %>" target="_blank" rel="noopener">View</a>
     </div>
   <% } %>
 
@@ -19,6 +19,15 @@
 
     <label for="bio">Bio (shown on your listings)</label>
     <textarea id="bio" name="bio"><%= user.bio || '' %></textarea>
+
+    <% if (user.role === 'seller' || user.role === 'admin') { %>
+      <label for="handle">Store URL name</label>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="muted" style="white-space:nowrap;">/store/</span>
+        <input type="text" id="handle" name="handle" value="<%= user.handle || '' %>" placeholder="your-store-name" style="flex:1;">
+      </div>
+      <p class="hint">Letters, numbers and dashes. This is your shareable store link.</p>
+    <% } %>
 
     <h2>Payment handles</h2>
     <p class="hint">Buyers see these at checkout so they can pay you directly. Fill in the ones you use.</p>

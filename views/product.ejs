@@ -25,7 +25,7 @@
     <span class="tag"><%= categoryLabels[product.category] %></span>
     <h1 style="margin-top:8px;"><%= product.title %></h1>
     <div class="price-big"><%= money(product.price_cents) %></div>
-    <p class="muted">Sold by <a href="/store/<%= product.seller_id %>"><strong><%= product.seller_name %></strong></a></p>
+    <p class="muted">Sold by <a href="/store/<%= product.seller_handle %>"><strong><%= product.seller_name %></strong></a></p>
 
     <% if (product.seller_locked) { %>
       <p class="muted">This item is temporarily unavailable.</p>
@@ -40,7 +40,7 @@
         <% if (!product.seller_locked && product.status === 'active') { %>
           <a class="btn" href="/product/<%= product.id %>/checkout">Buy — <%= money(product.price_cents) %></a>
         <% } %>
-        <a class="btn secondary" href="/store/<%= product.seller_id %>#chat">💬 Message seller</a>
+        <a class="btn secondary" href="/store/<%= product.seller_handle %>#chat">💬 Message seller</a>
       </div>
     <% } %>
 

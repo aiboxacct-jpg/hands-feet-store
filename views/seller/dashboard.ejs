@@ -25,14 +25,14 @@
   </div>
 </div>
 
-<% var storeUrl = absUrl('/store/' + user.id); %>
+<% var storeUrl = absUrl('/store/' + (user.handle || user.id)); %>
 <div class="share-box">
   <h2>📣 Share your store — this is how buyers find you</h2>
   <p class="muted" style="margin:0;">Post this one link on Reddit, X, Telegram, or anywhere. Every listing you add shows up here automatically.</p>
   <div class="share-link">
     <input type="text" readonly value="<%= storeUrl %>" onclick="this.select()">
     <button type="button" class="btn small share-copy" data-url="<%= storeUrl %>">🔗 Copy link</button>
-    <a class="btn small secondary" href="/store/<%= user.id %>" target="_blank" rel="noopener">View</a>
+    <a class="btn small secondary" href="/store/<%= user.handle || user.id %>" target="_blank" rel="noopener">View</a>
   </div>
   <%- include('../partials/share', { shareUrl: storeUrl, shareTitle: user.display_name + ' — shop my listings', label: 'Post to:' }) %>
 </div>

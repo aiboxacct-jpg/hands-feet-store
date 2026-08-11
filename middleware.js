@@ -7,7 +7,7 @@ async function loadUser(req, res, next) {
   res.locals.currentPath = req.path;
   if (req.session && req.session.userId) {
     const user = await db.get(
-      'SELECT id, email, display_name, role, cashapp, venmo, paypal, bio, locked FROM users WHERE id = ?',
+      'SELECT id, email, display_name, role, handle, cashapp, venmo, paypal, bio, locked FROM users WHERE id = ?',
       req.session.userId
     );
     if (user) {

@@ -4,6 +4,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const listing = require('../listing');
+const slug = require('../slug');
 
 const router = express.Router();
 const CATEGORIES = ['feet', 'hands', 'toys', 'other'];
@@ -57,12 +58,14 @@ router.post('/', upload, async (req, res) => {
 
   // Create the seller account.
   const hash = bcrypt.hashSync(password, 10);
+  const handle = await slug.uniqueHandle(db.get, displayName);
   const userInfo = await db.run(
-    `INSERT INTO users (email, password_hash, display_name, role, cashapp, venmo, paypal)
-     VALUES (?, ?, ?, 'seller', ?, ?, ?)`,
+    `INSERT INTO users (email, password_hash, display_name, role, handle, cashapp, venmo, paypal)
+     VALUES (?, ?, ?, 'seller', ?, ?, ?, ?)`,
     email,
     hash,
     displayName,
+    handle,
     cashapp,
     venmo,
     paypal

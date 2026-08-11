@@ -2,6 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const slug = require('../slug');
 const { requireLogin } = require('../middleware');
 
 const router = express.Router();
@@ -35,12 +36,14 @@ router.post('/register', async (req, res) => {
   }
 
   const hash = bcrypt.hashSync(password, 10);
+  const handle = await slug.uniqueHandle(db.get, displayName);
   const info = await db.run(
-    'INSERT INTO users (email, password_hash, display_name, role) VALUES (?, ?, ?, ?)',
+    'INSERT INTO users (email, password_hash, display_name, role, handle) VALUES (?, ?, ?, ?, ?)',
     email,
     hash,
     displayName,
-    role
+    role,
+    handle
   );
 
   req.session.userId = Number(info.lastInsertRowid);
@@ -88,6 +91,18 @@ router.post('/account', requireLogin, async (req, res) => {
   if (!displayName) {
     return res.render('account', { title: 'My account', error: 'Display name is required.', passwordError: null });
   }
+
+  // Sellers/admins can pick their own store URL name (handle). Buyers keep whatever they have.
+  if (req.user.role === 'seller' || req.user.role === 'admin') {
+    const requested = String(req.body.handle || '').trim();
+    // Fall back to their display name if they cleared it; always slugified + made unique.
+    const desired = slug.slugify(requested || displayName);
+    if (desired !== req.user.handle) {
+      const handle = await slug.uniqueHandle(db.get, desired, req.user.id);
+      await db.run('UPDATE users SET handle = ? WHERE id = ?', handle, req.user.id);
+    }
+  }
+
   await db.run(
     'UPDATE users SET display_name = ?, bio = ?, cashapp = ?, venmo = ?, paypal = ? WHERE id = ?',
     displayName,

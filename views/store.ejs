@@ -1,4 +1,4 @@
-<% var storeUrl = absUrl('/store/' + seller.id); %>
+<% var storeUrl = absUrl('/store/' + (seller.handle || seller.id)); %>
 
 <div style="margin-top:20px;">
   <h1 style="margin-bottom:2px;"><%= seller.display_name %></h1>
