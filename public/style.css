@@ -46,6 +46,22 @@ img { max-width: 100%; display: block; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .nav a { color: var(--ink); font-weight: 500; font-size: 0.95rem; }
 .nav a.active { color: var(--brand); }
+.nav-toggle { display: none; background: none; border: none; margin-left: auto; font-size: 1.7rem; line-height: 1; color: var(--ink); cursor: pointer; padding: 2px 6px; }
+
+/* Mobile header: collapse the nav into a tap-to-open menu */
+@media (max-width: 680px) {
+  .site-header .container { flex-wrap: wrap; height: auto; min-height: 54px; gap: 6px; padding: 8px 0; }
+  .brand { font-size: 1.1rem; }
+  .nav-toggle { display: block; }
+  .nav { margin-left: 0; flex-basis: 100%; display: none; flex-direction: column; align-items: stretch; gap: 2px; padding-bottom: 6px; }
+  .nav.open { display: flex; }
+  .nav a, .nav .inline-form, .nav .btn { width: 100%; text-align: left; }
+  .nav a { padding: 11px 8px; border-radius: 8px; font-size: 1rem; }
+  .nav a:hover { background: #f6f0f4; text-decoration: none; }
+  .nav .inline-form .btn { text-align: center; }
+  .container { padding: 0 14px; }
+  h1 { font-size: 1.45rem; }
+}
 
 /* Buttons */
 .btn {

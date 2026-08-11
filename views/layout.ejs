@@ -11,7 +11,9 @@
   <header class="site-header">
     <div class="container">
       <a class="brand" href="/"><%= storeName %></a>
-      <nav class="nav">
+      <button class="nav-toggle" type="button" aria-label="Menu"
+              onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+      <nav class="nav" id="nav">
         <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Browse</a>
         <a href="/lounge" class="<%= currentPath.startsWith('/lounge') ? 'active' : '' %>">Lounge</a>
         <% if (user) { %>

@@ -32,7 +32,11 @@ function uploadImage(buffer, originalName) {
         { folder: 'store', resource_type: 'image' },
         (err, result) => {
           if (err) return reject(err);
-          resolve({ url: result.secure_url, public_id: result.public_id });
+          // Deliver via f_auto so iPhone HEIC photos convert to a web format.
+          resolve({
+            url: cloudinary.url(result.public_id, { secure: true, fetch_format: 'auto', quality: 'auto' }),
+            public_id: result.public_id,
+          });
         }
       );
       stream.end(buffer);
@@ -72,7 +76,7 @@ async function makeBlurredPreview(source, originalName) {
       resource_type: 'image',
       secure: true,
       sign_url: true,
-      transformation: [{ effect: 'blur:2000', quality: 'auto' }],
+      transformation: [{ effect: 'blur:2000', quality: 'auto', fetch_format: 'auto' }],
     });
     return {
       preview: { url: blurUrl, public_id: clearUp.public_id },
@@ -98,6 +102,7 @@ async function restoreClearPreview(image) {
       resource_type: 'image',
       secure: true,
       sign_url: true,
+      transformation: [{ fetch_format: 'auto', quality: 'auto' }],
     });
     return { url, public_id: image.clear_ref, sharedAsset: true };
   }

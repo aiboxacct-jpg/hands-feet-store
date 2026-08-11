@@ -114,11 +114,19 @@ app.use((req, res) => {
 // Error handler.
 app.use((err, req, res, next) => {
   console.error(err);
-  const message =
-    err && err.code === 'LIMIT_FILE_SIZE'
-      ? 'One of your images is too large (max 8 MB each).'
-      : 'Something went wrong. Please try again.';
-  res.status(500).render('error', { title: 'Error', message });
+  let status = 500;
+  let title = 'Error';
+  let message = 'Something went wrong. Please try again.';
+  if (err && err.code === 'LIMIT_FILE_SIZE') {
+    status = 400;
+    title = 'File too large';
+    message = 'That file is too large — photos and files can be up to 50 MB each. Try a smaller one.';
+  } else if (err && err.name === 'MulterError') {
+    status = 400;
+    title = 'Upload problem';
+    message = 'There was a problem with your upload. Please go back and try again (one photo at a time can help).';
+  }
+  res.status(status).render('error', { title, message });
 });
 
 db.init()
