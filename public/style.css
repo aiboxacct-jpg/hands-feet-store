@@ -189,6 +189,10 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
 .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .stat .n { font-size: 1.6rem; font-weight: 800; color: var(--brand-dark); }
 .stat .l { color: var(--muted); font-size: 0.85rem; }
+.bill-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.stat.slim { padding: 9px 14px; flex: 0 1 auto; }
+.stat.slim .n { font-size: 1.15rem; }
+.stat.slim .l { font-size: 0.76rem; }
 .muted { color: var(--muted); }
 .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
 .inline-form { display: inline; }

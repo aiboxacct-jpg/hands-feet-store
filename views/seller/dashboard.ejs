@@ -17,9 +17,9 @@
   </div>
 <% } %>
 
-<div class="stat-row" style="margin-top:16px;">
-  <div class="stat"><div class="n"><%= cutPercent %>%</div><div class="l">Site fee per sale</div></div>
-  <div class="stat">
+<div class="bill-row">
+  <div class="stat slim"><div class="n"><%= cutPercent %>%</div><div class="l">Site fee per sale</div></div>
+  <div class="stat slim">
     <div class="n" style="<%= owed > 0 ? 'color:var(--danger);' : '' %>"><%= money(owed) %></div>
     <div class="l">Your current bill<% if (owed > 0 && platformHandle) { %> · pay to <%= platformHandle %><% } %></div>
   </div>
