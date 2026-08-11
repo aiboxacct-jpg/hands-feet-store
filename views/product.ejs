@@ -31,16 +31,17 @@
       <p class="muted">This item is temporarily unavailable.</p>
     <% } else if (product.status !== 'active') { %>
       <p><span class="badge <%= product.status %>"><%= product.status %></span> — not available for purchase.</p>
-    <% } else { %>
-      <% if (user && user.id === product.seller_id) { %>
-        <p class="muted">This is your listing. <a href="/seller/<%= product.id %>/edit">Edit it</a>.</p>
-      <% } else { %>
-        <a class="btn" href="/product/<%= product.id %>/checkout" style="margin-top:8px;">Buy — <%= money(product.price_cents) %></a>
-      <% } %>
+    <% } else if (user && user.id === product.seller_id) { %>
+      <p class="muted">This is your listing. <a href="/seller/<%= product.id %>/edit">Edit it</a>.</p>
     <% } %>
 
     <% if (!user || user.id !== product.seller_id) { %>
-      <p style="margin-top:10px;"><a class="btn secondary" href="/store/<%= product.seller_id %>#chat">💬 Message seller</a></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <% if (!product.seller_locked && product.status === 'active') { %>
+          <a class="btn" href="/product/<%= product.id %>/checkout">Buy — <%= money(product.price_cents) %></a>
+        <% } %>
+        <a class="btn secondary" href="/store/<%= product.seller_id %>#chat">💬 Message seller</a>
+      </div>
     <% } %>
 
     <%- include('partials/share', {

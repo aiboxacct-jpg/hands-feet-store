@@ -190,8 +190,9 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
 }
 
 /* Share widget */
-.share { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
-.share-label { font-weight: 600; color: var(--muted); font-size: 0.9rem; }
+.share { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+.share .btn { padding: 5px 10px; font-size: 0.8rem; }
+.share-label { font-weight: 600; color: var(--muted); font-size: 0.88rem; }
 .share-box {
   background: linear-gradient(135deg, #f6e9f0, #eee9fb);
   border: 1px solid var(--line); border-radius: var(--radius);

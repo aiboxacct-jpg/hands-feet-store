@@ -6,7 +6,7 @@
 %>
 <div class="share">
   <span class="share-label"><%= (typeof label !== 'undefined' && label) ? label : 'Share:' %></span>
-  <button type="button" class="btn small share-copy" data-url="<%= _u %>">🔗 Copy link</button>
+  <button type="button" class="btn small share-copy" data-url="<%= _u %>">🔗 Copy</button>
   <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
      href="https://www.reddit.com/submit?url=<%= enc(_u) %>&title=<%= enc(_t) %>">Reddit</a>
   <a class="btn small secondary" target="_blank" rel="noopener noreferrer"
