@@ -122,6 +122,19 @@ router.get('/orders', async (req, res) => {
   res.render('admin/orders', { title: 'All orders', orders });
 });
 
+router.post('/orders/:id/delete', async (req, res) => {
+  const order = await db.get('SELECT * FROM orders WHERE id = ?', req.params.id);
+  if (!order) {
+    flash(req, 'error', 'That order no longer exists.');
+    return res.redirect('/admin/orders');
+  }
+  await db.run('DELETE FROM orders WHERE id = ?', order.id);
+  // If it had accrued a platform fee, the seller's balance/lock may change.
+  await billing.recomputeLock(order.seller_id);
+  flash(req, 'success', 'Order #' + order.id + ' deleted.');
+  res.redirect('/admin/orders');
+});
+
 router.post('/orders/:id/status', async (req, res) => {
   const status = ['pending', 'paid', 'shipped', 'cancelled'].includes(req.body.status) ? req.body.status : null;
   if (status) {

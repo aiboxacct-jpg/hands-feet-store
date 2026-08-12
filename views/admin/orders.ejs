@@ -12,7 +12,7 @@
 <% } else { %>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>#</th><th>Item</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Pay</th><th>Status</th></tr></thead>
+      <thead><tr><th>#</th><th>Item</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Pay</th><th>Status</th><th></th></tr></thead>
       <tbody>
         <% orders.forEach(function(o){ %>
           <tr>
@@ -30,6 +30,12 @@
                   <% }); %>
                 </select>
                 <button class="btn small secondary" type="submit">Set</button>
+              </form>
+            </td>
+            <td>
+              <form action="/admin/orders/<%= o.id %>/delete" method="post"
+                    onsubmit="return confirm('Delete order #<%= o.id %>? This cannot be undone.');">
+                <button class="btn small danger" type="submit">Delete</button>
               </form>
             </td>
           </tr>
