@@ -94,7 +94,9 @@ CREATE TABLE IF NOT EXISTS conversations (
   buyer_name      TEXT,                    -- display name (guest-entered or account name)
   access_token    TEXT NOT NULL,           -- private link so a guest can return
   created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  last_message_at TEXT
+  last_message_at TEXT,
+  seller_read_at  TEXT,                    -- when the seller last opened this thread
+  buyer_read_at   TEXT                     -- when the buyer last opened this thread
 );
 
 CREATE TABLE IF NOT EXISTS messages (
@@ -194,6 +196,8 @@ async function migrate() {
     'ALTER TABLE users ADD COLUMN locked INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE users ADD COLUMN handle TEXT',
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle ON users(handle)',
+    'ALTER TABLE conversations ADD COLUMN seller_read_at TEXT',
+    'ALTER TABLE conversations ADD COLUMN buyer_read_at TEXT',
   ];
   for (const sql of stmts) {
     try {

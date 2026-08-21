@@ -2,6 +2,7 @@
 const express = require('express');
 const db = require('../db');
 const chat = require('../chat');
+const { tipLinks } = require('../tips');
 
 const router = express.Router();
 const MAX = 2000;
@@ -64,7 +65,8 @@ router.get('/', async (req, res) => {
 // A single conversation thread.
 router.get('/:id', async (req, res) => {
   const conv = await db.get(
-    'SELECT c.*, s.display_name AS seller_name FROM conversations c JOIN users s ON s.id = c.seller_id WHERE c.id = ?',
+    `SELECT c.*, s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal
+       FROM conversations c JOIN users s ON s.id = c.seller_id WHERE c.id = ?`,
     req.params.id
   );
   if (!conv) return res.status(404).render('error', { title: 'Not found', message: 'Conversation not found.' });
@@ -77,11 +79,14 @@ router.get('/:id', async (req, res) => {
     return res.status(403).render('error', { title: 'Not allowed', message: 'You cannot view this conversation.' });
   }
   const messages = await chat.getMessages(conv.id);
+  await chat.markRead(conv, req); // opening the thread clears its unread badge
   res.render('messages/thread', {
     title: acc.isSeller ? 'Chat with ' + (conv.buyer_name || 'Buyer') : 'Chat with ' + conv.seller_name,
     conv,
     messages,
     isSeller: acc.isSeller,
+    // The buyer can tip the seller from inside the private chat.
+    tips: acc.isSeller ? [] : tipLinks(conv),
     tokenSuffix: req.query.t ? '?t=' + encodeURIComponent(req.query.t) : '',
   });
 });

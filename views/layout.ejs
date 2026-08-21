@@ -22,7 +22,7 @@
             <a href="/store/<%= user.handle || user.id %>">My store</a>
           <% } %>
           <a href="/orders">My orders</a>
-          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages</a>
+          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages<% if (unreadMessages > 0) { %> <span class="nav-badge"><%= unreadMessages > 99 ? '99+' : unreadMessages %></span><% } %></a>
           <% if (user.role === 'admin') { %>
             <a href="/admin" class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>">Admin</a>
           <% } %>
@@ -31,7 +31,7 @@
             <button class="btn ghost small" type="submit">Log out</button>
           </form>
         <% } else { %>
-          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages</a>
+          <a href="/messages" class="<%= currentPath.startsWith('/messages') ? 'active' : '' %>">Messages<% if (unreadMessages > 0) { %> <span class="nav-badge"><%= unreadMessages > 99 ? '99+' : unreadMessages %></span><% } %></a>
           <a href="/login">Log in</a>
           <a href="/start-selling" class="btn small cta">Start selling</a>
         <% } %>

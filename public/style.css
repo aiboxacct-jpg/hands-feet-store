@@ -46,6 +46,12 @@ img { max-width: 100%; display: block; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .nav a { color: var(--ink); font-weight: 500; font-size: 0.95rem; }
 .nav a.active { color: var(--brand); }
+.nav-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: 3px;
+  border-radius: 999px; background: var(--danger); color: #fff;
+  font-size: 0.72rem; font-weight: 700; line-height: 1; vertical-align: middle;
+}
 .nav-toggle { display: none; background: none; border: none; margin-left: auto; font-size: 1.7rem; line-height: 1; color: var(--ink); cursor: pointer; padding: 2px 6px; }
 
 /* Mobile header: collapse the nav into a tap-to-open menu */
@@ -276,3 +282,21 @@ h2 { font-size: 1.2rem; margin: 28px 0 10px; }
 .age-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f6e9f0, #eee9fb); padding: 20px; }
 .age-box { background: #fff; border-radius: 18px; padding: 36px; max-width: 440px; text-align: center; box-shadow: 0 10px 40px rgba(80,40,70,0.15); }
 .age-box h1 { color: var(--brand); margin-top: 0; }
+
+/* --- Tips (Cash App / Venmo / PayPal) --- */
+.tip-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; margin: 18px 0; }
+.tip-card h2 { margin-top: 0; }
+.tip-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tip-lead { font-weight: 700; color: var(--ink); margin-right: 2px; }
+.tip-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font-size: 0.88rem; font-weight: 700; color: #fff; text-decoration: none; border: none; }
+.tip-btn:hover { text-decoration: none; opacity: 0.92; }
+.tip-btn .tip-handle { font-weight: 500; opacity: 0.92; font-size: 0.82rem; }
+.tip-btn.cashapp { background: #00c244; }
+.tip-btn.venmo { background: #3d95ce; }
+.tip-btn.paypal { background: #003087; }
+.tip-btn.static { cursor: default; }
+.tip-btn.static:hover { opacity: 1; }
+
+/* Lounge: "Chat & tip" link on a creator's message */
+.lmsg-dm { font-size: 0.72rem; font-weight: 700; color: var(--brand-dark); text-decoration: none; background: #fbe9f1; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.lmsg-dm:hover { background: #f7d9e7; text-decoration: none; }

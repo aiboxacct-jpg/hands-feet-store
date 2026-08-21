@@ -36,6 +36,49 @@ function getMessages(convId) {
   return db.all('SELECT * FROM messages WHERE conversation_id = ? ORDER BY id', convId);
 }
 
+// Mark this conversation as read for whichever side the viewer is on.
+// (Admins viewing someone else's thread do NOT clear the real seller's unread.)
+async function markRead(conv, req) {
+  if (req.user && req.user.id === conv.seller_id) {
+    await db.run("UPDATE conversations SET seller_read_at = datetime('now') WHERE id = ?", conv.id);
+    return;
+  }
+  const isBuyer =
+    (!!req.user && req.user.id === conv.buyer_user_id) ||
+    (!req.user && !!conv.guest_id && conv.guest_id === req.gid) ||
+    !!(req.query && req.query.t && conv.access_token && req.query.t === conv.access_token);
+  if (isBuyer) {
+    await db.run("UPDATE conversations SET buyer_read_at = datetime('now') WHERE id = ?", conv.id);
+  }
+}
+
+// Total unread messages for the current viewer (across all their conversations).
+// Unread = a message from the OTHER side newer than when this side last opened it.
+async function unreadCount(req) {
+  if (req.user) {
+    const row = await db.get(
+      `SELECT
+         (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
+            WHERE c.seller_id = ? AND m.sender = 'buyer'
+              AND (c.seller_read_at IS NULL OR m.created_at > c.seller_read_at))
+       + (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id
+            WHERE c.buyer_user_id = ? AND m.sender = 'seller'
+              AND (c.buyer_read_at IS NULL OR m.created_at > c.buyer_read_at)) AS n`,
+      req.user.id,
+      req.user.id
+    );
+    return row ? Number(row.n) || 0 : 0;
+  }
+  // Guest buyer, recognized by device cookie.
+  const row = await db.get(
+    `SELECT COUNT(*) AS n FROM messages m JOIN conversations c ON c.id = m.conversation_id
+      WHERE c.guest_id = ? AND m.sender = 'seller'
+        AND (c.buyer_read_at IS NULL OR m.created_at > c.buyer_read_at)`,
+    req.gid
+  );
+  return row ? Number(row.n) || 0 : 0;
+}
+
 // Who is the current viewer relative to this conversation?
 function access(conv, req) {
   const tokenOk = !!(req.query && req.query.t && conv.access_token && req.query.t === conv.access_token);
@@ -47,4 +90,4 @@ function access(conv, req) {
   return { isSeller, isBuyer, ok: isSeller || isBuyer };
 }
 
-module.exports = { findConversationForVisitor, findOrCreateConversation, addMessage, getMessages, access };
+module.exports = { findConversationForVisitor, findOrCreateConversation, addMessage, getMessages, access, markRead, unreadCount };

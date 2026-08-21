@@ -9,6 +9,7 @@ const expressLayouts = require('express-ejs-layouts');
 
 const db = require('./db');
 const billing = require('./billing');
+const chat = require('./chat');
 const { loadUser } = require('./middleware');
 
 const app = express();
@@ -69,6 +70,18 @@ app.use((req, res, next) => {
 });
 
 app.use(loadUser);
+
+// Unread private-message count for the nav badge (skip static asset paths).
+app.use(async (req, res, next) => {
+  res.locals.unreadMessages = 0;
+  if (req.path.startsWith('/public') || req.path.startsWith('/uploads')) return next();
+  try {
+    res.locals.unreadMessages = await chat.unreadCount(req);
+  } catch (_) {
+    /* non-fatal: never block a page over the badge */
+  }
+  next();
+});
 
 // --- Age gate ---------------------------------------------------------------
 // Require an 18+ confirmation (stored in the session) before browsing.
