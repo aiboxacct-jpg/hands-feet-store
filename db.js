@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   cashapp       TEXT,
   venmo         TEXT,
   paypal        TEXT,
+  crypto        TEXT, -- crypto payment address (BTC etc.), seller's own wallet
   bio           TEXT,
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS products (
   price_cents INTEGER NOT NULL,
   category    TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'active',
+  is_explicit INTEGER NOT NULL DEFAULT 0,   -- 1 = explicit marketplace lane (18+), 0 = SFW
   blur_previews INTEGER NOT NULL DEFAULT 0,   -- 1 = show blurred previews, deliver clear originals
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -116,6 +118,18 @@ CREATE INDEX IF NOT EXISTS idx_images_product     ON product_images(product_id);
 CREATE INDEX IF NOT EXISTS idx_deliverables_product ON deliverables(product_id);
 CREATE INDEX IF NOT EXISTS idx_orders_buyer    ON orders(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_seller   ON orders(seller_id);
+
+-- Free SFW showcase gallery: creators post teaser photos (bikinis, teases,
+-- feet). Not for sale — drives traffic to their store / listings.
+CREATE TABLE IF NOT EXISTS showcase_posts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  seller_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  image_url  TEXT NOT NULL,
+  public_id  TEXT,
+  caption    TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_showcase_seller ON showcase_posts(seller_id);
 `;
 
 let backend = null;
@@ -198,6 +212,17 @@ async function migrate() {
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_handle ON users(handle)',
     'ALTER TABLE conversations ADD COLUMN seller_read_at TEXT',
     'ALTER TABLE conversations ADD COLUMN buyer_read_at TEXT',
+    'ALTER TABLE users ADD COLUMN crypto TEXT',
+    'ALTER TABLE products ADD COLUMN is_explicit INTEGER NOT NULL DEFAULT 0',
+    `CREATE TABLE IF NOT EXISTS showcase_posts (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      seller_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      image_url  TEXT NOT NULL,
+      public_id  TEXT,
+      caption    TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_showcase_seller ON showcase_posts(seller_id)',
   ];
   for (const sql of stmts) {
     try {

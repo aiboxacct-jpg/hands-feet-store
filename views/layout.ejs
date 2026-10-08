@@ -15,6 +15,7 @@
               onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
       <nav class="nav" id="nav">
         <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Browse</a>
+        <a href="/showcase" class="<%= currentPath.startsWith('/showcase') ? 'active' : '' %>">Showcase</a>
         <a href="/lounge" class="<%= currentPath.startsWith('/lounge') ? 'active' : '' %>">Lounge</a>
         <% if (user) { %>
           <% if (user.role === 'seller' || user.role === 'admin') { %>

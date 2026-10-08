@@ -88,6 +88,7 @@ router.post('/account', requireLogin, async (req, res) => {
   const cashapp = String(req.body.cashapp || '').trim();
   const venmo = String(req.body.venmo || '').trim();
   const paypal = String(req.body.paypal || '').trim();
+  const crypto = String(req.body.crypto || '').trim();
   if (!displayName) {
     return res.render('account', { title: 'My account', error: 'Display name is required.', passwordError: null });
   }
@@ -104,12 +105,13 @@ router.post('/account', requireLogin, async (req, res) => {
   }
 
   await db.run(
-    'UPDATE users SET display_name = ?, bio = ?, cashapp = ?, venmo = ?, paypal = ? WHERE id = ?',
+    'UPDATE users SET display_name = ?, bio = ?, cashapp = ?, venmo = ?, paypal = ?, crypto = ? WHERE id = ?',
     displayName,
     bio,
     cashapp,
     venmo,
     paypal,
+    crypto,
     req.user.id
   );
   flash(req, 'success', 'Account updated.');

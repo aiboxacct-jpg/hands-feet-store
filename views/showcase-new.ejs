@@ -1,0 +1,14 @@
+<h1>Post to showcase</h1>
+<p class="page-sub">Share a free SFW teaser — bikini, tease, or feet pic. Keep it safe-for-work; explicit content belongs in the marketplace.</p>
+
+<% if (error) { %><div class="alert error"><%= error %></div><% } %>
+
+<form method="post" action="/showcase" enctype="multipart/form-data" class="form" style="max-width:520px;margin-top:16px;">
+  <label for="photo">Photo</label>
+  <input type="file" id="photo" name="photo" accept="image/*" required>
+
+  <label for="caption">Caption (optional)</label>
+  <input type="text" id="caption" name="caption" maxlength="280" placeholder="A little tease…">
+
+  <button class="btn" type="submit">Post teaser</button>
+</form>

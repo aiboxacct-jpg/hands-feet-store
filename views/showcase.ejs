@@ -1,0 +1,29 @@
+<h1>Showcase</h1>
+<p class="page-sub">Free teasers from creators — bikinis, teases, feet. Like what you see? Visit her store for the full menu.</p>
+
+<% if (user && (user.role === 'seller' || user.role === 'admin')) { %>
+  <p style="margin-top:14px;"><a class="btn" href="/showcase/new">Post a teaser</a></p>
+<% } %>
+
+<% if (posts.length === 0) { %>
+  <div class="empty" style="margin-top:18px;">
+    <p>No showcase posts yet. Check back soon.</p>
+  </div>
+<% } else { %>
+  <div class="grid" style="margin-top:18px;">
+    <% posts.forEach(function(p){ %>
+      <div class="card">
+        <div class="thumb" style="background-image:url('<%= p.image_url %>')"></div>
+        <div class="body">
+          <% if (p.caption) { %><span class="title"><%= p.caption %></span><% } %>
+          <span class="meta">by <a href="/store/<%= p.seller_handle || p.seller_id %>"><%= p.seller_name %></a></span>
+          <% if (user && (user.id === p.seller_id || user.role === 'admin')) { %>
+            <form method="post" action="/showcase/<%= p.id %>/delete" style="margin-top:8px;" onsubmit="return confirm('Delete this post?');">
+              <button class="btn secondary small" type="submit">Delete</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>

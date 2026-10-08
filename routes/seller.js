@@ -50,6 +50,7 @@ async function attachThumb(products) {
 
 const filesOf = (req, field) => (req.files && req.files[field]) || [];
 const isBlurOn = (req) => req.body.blur_previews === 'on' || req.body.blur_previews === '1';
+const isExplicitOn = (req) => req.body.is_explicit === 'on' || req.body.is_explicit === '1';
 
 // Locked sellers (unpaid bill over the threshold) can't create or edit listings.
 async function blockIfLocked(req, res, next) {
@@ -80,7 +81,7 @@ router.get('/', async (req, res) => {
       ORDER BY o.created_at DESC`,
     req.user.id
   );
-  const needsHandles = !req.user.cashapp && !req.user.venmo && !req.user.paypal;
+  const needsHandles = !req.user.cashapp && !req.user.venmo && !req.user.paypal && !req.user.crypto;
   const s = billing.settings();
   const owed = await billing.sellerBill(req.user.id);
   res.render('seller/dashboard', {
@@ -118,14 +119,16 @@ router.post('/new', blockIfLocked, upload, async (req, res) => {
   }
 
   const blur = isBlurOn(req);
+  const explicit = isExplicitOn(req);
   const info = await db.run(
-    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews, is_explicit) VALUES (?, ?, ?, ?, ?, ?, ?)',
     req.user.id,
     title,
     description,
     priceCents,
     category,
-    blur ? 1 : 0
+    blur ? 1 : 0,
+    explicit ? 1 : 0
   );
   const productId = Number(info.lastInsertRowid);
   const { nextDel } = await listing.saveImages(filesOf(req, 'images'), productId, blur, 0, 0);
@@ -184,14 +187,16 @@ router.post('/:id/edit', blockIfLocked, upload, async (req, res) => {
   }
 
   const blur = isBlurOn(req);
+  const explicit = isExplicitOn(req);
   await db.run(
-    'UPDATE products SET title = ?, description = ?, price_cents = ?, category = ?, status = ?, blur_previews = ? WHERE id = ?',
+    'UPDATE products SET title = ?, description = ?, price_cents = ?, category = ?, status = ?, blur_previews = ?, is_explicit = ? WHERE id = ?',
     title,
     description,
     priceCents,
     category,
     status,
     blur ? 1 : 0,
+    explicit ? 1 : 0,
     product.id
   );
 

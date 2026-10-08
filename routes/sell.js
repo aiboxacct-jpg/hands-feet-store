@@ -40,17 +40,18 @@ router.post('/', upload, async (req, res) => {
   const cashapp = String(b.cashapp || '').trim();
   const venmo = String(b.venmo || '').trim();
   const paypal = String(b.paypal || '').trim();
+  const crypto = String(b.crypto || '').trim();
   const title = String(b.title || '').trim();
   const description = String(b.description || '').trim();
   const category = CATEGORIES.includes(b.category) ? b.category : 'other';
   const priceCents = priceToCents(b.price);
 
-  const values = { email, display_name: displayName, cashapp, venmo, paypal, title, description, category, price: b.price };
+  const values = { email, display_name: displayName, cashapp, venmo, paypal, crypto, title, description, category, price: b.price };
   const fail = (error) => res.render('sell/start', { title: 'Start selling', values, categories: CATEGORIES, error });
 
   if (!displayName || !email || !password) return fail('Name, email, and password are required.');
   if (password.length < 6) return fail('Password must be at least 6 characters.');
-  if (!cashapp && !venmo && !paypal) return fail('Add at least one payment handle (Cash App, Venmo, or PayPal) so you can get paid.');
+  if (!cashapp && !venmo && !paypal && !crypto) return fail('Add at least one payment handle (Cash App, Venmo, PayPal, or crypto) so you can get paid.');
   if (!title || !Number.isFinite(priceCents)) return fail('Your item needs a title and a valid price.');
 
   const exists = await db.get('SELECT id FROM users WHERE email = ?', email);
@@ -60,28 +61,31 @@ router.post('/', upload, async (req, res) => {
   const hash = bcrypt.hashSync(password, 10);
   const handle = await slug.uniqueHandle(db.get, displayName);
   const userInfo = await db.run(
-    `INSERT INTO users (email, password_hash, display_name, role, handle, cashapp, venmo, paypal)
-     VALUES (?, ?, ?, 'seller', ?, ?, ?, ?)`,
+    `INSERT INTO users (email, password_hash, display_name, role, handle, cashapp, venmo, paypal, crypto)
+     VALUES (?, ?, ?, 'seller', ?, ?, ?, ?, ?)`,
     email,
     hash,
     displayName,
     handle,
     cashapp,
     venmo,
-    paypal
+    paypal,
+    crypto
   );
   const sellerId = Number(userInfo.lastInsertRowid);
 
   // Create the first listing.
   const blur = b.blur_previews === 'on' || b.blur_previews === '1';
+  const explicit = b.is_explicit === 'on' || b.is_explicit === '1';
   const prodInfo = await db.run(
-    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO products (seller_id, title, description, price_cents, category, blur_previews, is_explicit) VALUES (?, ?, ?, ?, ?, ?, ?)',
     sellerId,
     title,
     description,
     priceCents,
     category,
-    blur ? 1 : 0
+    blur ? 1 : 0,
+    explicit ? 1 : 0
   );
   const productId = Number(prodInfo.lastInsertRowid);
 

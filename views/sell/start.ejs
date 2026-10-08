@@ -35,6 +35,10 @@
         <label for="paypal">PayPal</label>
         <input type="text" id="paypal" name="paypal" value="<%= values.paypal || '' %>" placeholder="you@email.com">
       </div>
+      <div>
+        <label for="crypto">Crypto address</label>
+        <input type="text" id="crypto" name="crypto" value="<%= values.crypto || '' %>" placeholder="BTC / ETH / USDT address">
+      </div>
     </div>
 
     <h2>Your first item</h2>
@@ -65,6 +69,11 @@
       <span>🔒 Blur my photos as previews — buyers get the clear originals after they pay</span>
     </label>
     <p class="hint">Perfect for selling pics: your listing shows a blurred teaser, and each photo's full-quality original is delivered automatically once you confirm the buyer's payment.</p>
+
+    <label style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+      <input type="checkbox" name="is_explicit" value="1" style="width:auto;" <%= values.is_explicit ? 'checked' : '' %>>
+      <span>🔞 Explicit — this listing goes in the 18+ explicit marketplace lane</span>
+    </label>
 
     <label for="images">Preview photos <span class="muted" style="font-weight:400;">(shown publicly on your listing)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>

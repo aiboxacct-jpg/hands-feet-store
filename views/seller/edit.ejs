@@ -42,6 +42,12 @@
     </label>
     <p class="hint">When on, your photos are shown blurred and each clear original is delivered automatically once you mark an order paid — including photos already on this listing.</p>
 
+    <label style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+      <input type="checkbox" name="is_explicit" value="1" style="width:auto;" <%= product && product.is_explicit ? 'checked' : '' %>>
+      <span>🔞 Explicit — this listing goes in the 18+ explicit marketplace lane</span>
+    </label>
+    <p class="hint">Explicit listings are badged and filterable. Keep showcase posts SFW; the marketplace is where explicit selling lives.</p>
+
     <label for="images">Preview photos <span class="muted" style="font-weight:400;">(public)</span></label>
     <input type="file" id="images" name="images" accept="image/*" multiple>
     <p class="hint">Up to 6 images. <% if (isEdit) { %>New uploads are added to the existing photos.<% } %></p>

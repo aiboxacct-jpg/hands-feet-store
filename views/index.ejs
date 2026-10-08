@@ -9,10 +9,16 @@
 </form>
 
 <div class="chips">
-  <a class="chip <%= !category ? 'active' : '' %>" href="/">All</a>
+  <a class="chip <%= !category ? 'active' : '' %>" href="/?<%= lane && lane !== 'all' ? 'lane=' + lane + '&' : '' %><%= q ? 'q=' + encodeURIComponent(q) : '' %>">All</a>
   <% categories.forEach(function(c){ %>
-    <a class="chip <%= category === c ? 'active' : '' %>" href="/?category=<%= c %>"><%= categoryLabels[c] %></a>
+    <a class="chip <%= category === c ? 'active' : '' %>" href="/?category=<%= c %><%= lane && lane !== 'all' ? '&lane=' + lane : '' %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= categoryLabels[c] %></a>
   <% }); %>
+</div>
+
+<div class="chips" style="margin-top:8px;">
+  <a class="chip <%= (!lane || lane === 'all') ? 'active' : '' %>" href="/?<%= category ? 'category=' + category + '&' : '' %><%= q ? 'q=' + encodeURIComponent(q) : '' %>">All content</a>
+  <a class="chip <%= lane === 'sfw' ? 'active' : '' %>" href="/?lane=sfw<%= category ? '&category=' + category : '' %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">SFW</a>
+  <a class="chip <%= lane === 'explicit' ? 'active' : '' %>" href="/?lane=explicit<%= category ? '&category=' + category : '' %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">🔞 Explicit</a>
 </div>
 
 <% if (products.length === 0) { %>
@@ -30,6 +36,9 @@
           <% if (!p.thumb) { %>No photo<% } %>
           <% if (p.blur_previews) { %>
             <span style="position:absolute;top:8px;right:8px;background:rgba(43,36,48,.82);color:#fff;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:600;">🔒</span>
+          <% } %>
+          <% if (p.is_explicit) { %>
+            <span style="position:absolute;top:8px;left:8px;background:#b91c1c;color:#fff;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;">🔞 Explicit</span>
           <% } %>
         </div>
         <div class="body">

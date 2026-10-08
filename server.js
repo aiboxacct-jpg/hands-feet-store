@@ -108,6 +108,7 @@ app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/shop'));
 app.use('/messages', require('./routes/messages'));
 app.use('/lounge', require('./routes/lounge'));
+app.use('/showcase', require('./routes/showcase'));
 app.use('/start-selling', require('./routes/sell'));
 app.use('/seller', require('./routes/seller'));
 app.use('/admin', require('./routes/admin'));

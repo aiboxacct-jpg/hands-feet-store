@@ -30,6 +30,7 @@ async function withThumbnails(products) {
 router.get('/', async (req, res) => {
   const category = CATEGORIES.includes(req.query.category) ? req.query.category : null;
   const q = String(req.query.q || '').trim();
+  const lane = ['all', 'sfw', 'explicit'].includes(req.query.lane) ? req.query.lane : 'all';
 
   let sql =
     `SELECT p.*, u.display_name AS seller_name
@@ -39,6 +40,11 @@ router.get('/', async (req, res) => {
   if (category) {
     sql += ' AND p.category = ?';
     params.push(category);
+  }
+  if (lane === 'sfw') {
+    sql += ' AND p.is_explicit = 0';
+  } else if (lane === 'explicit') {
+    sql += ' AND p.is_explicit = 1';
   }
   if (q) {
     sql += ' AND (p.title LIKE ? OR p.description LIKE ?)';
@@ -52,6 +58,7 @@ router.get('/', async (req, res) => {
     products,
     category,
     q,
+    lane,
     categories: CATEGORIES,
     categoryLabels: CATEGORY_LABELS,
   });
@@ -107,7 +114,7 @@ router.get('/store/:id', async (req, res) => {
 router.get('/product/:id', async (req, res) => {
   const product = await db.get(
     `SELECT p.*, u.display_name AS seller_name, u.bio AS seller_bio,
-            u.cashapp, u.venmo, u.paypal, u.locked AS seller_locked, u.handle AS seller_handle
+            u.cashapp, u.venmo, u.paypal, u.crypto, u.locked AS seller_locked, u.handle AS seller_handle
        FROM products p JOIN users u ON u.id = p.seller_id
       WHERE p.id = ?`,
     req.params.id
@@ -133,13 +140,14 @@ function paymentOptions(seller) {
   if (seller.cashapp) opts.push({ key: 'cashapp', label: 'Cash App', handle: seller.cashapp });
   if (seller.venmo) opts.push({ key: 'venmo', label: 'Venmo', handle: seller.venmo });
   if (seller.paypal) opts.push({ key: 'paypal', label: 'PayPal', handle: seller.paypal });
+  if (seller.crypto) opts.push({ key: 'crypto', label: 'Crypto', handle: seller.crypto });
   return opts;
 }
 
 // Checkout is open to guests. Signed-in users skip re-entering contact.
 router.get('/product/:id/checkout', async (req, res) => {
   const product = await db.get(
-    `SELECT p.*, u.display_name AS seller_name, u.cashapp, u.venmo, u.paypal, u.locked AS seller_locked
+    `SELECT p.*, u.display_name AS seller_name, u.cashapp, u.venmo, u.paypal, u.crypto, u.locked AS seller_locked
        FROM products p JOIN users u ON u.id = p.seller_id
       WHERE p.id = ?`,
     req.params.id
@@ -217,7 +225,7 @@ router.get('/orders', requireLogin, async (req, res) => {
 router.get('/orders/:id', async (req, res) => {
   const order = await db.get(
     `SELECT o.*, p.title, p.category,
-            s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal,
+            s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal, s.crypto,
             COALESCE(b.display_name, 'Guest') AS buyer_name
        FROM orders o
        JOIN products p ON p.id = o.product_id
@@ -240,7 +248,7 @@ router.get('/orders/:id', async (req, res) => {
     }
     return res.status(403).render('error', { title: 'Not allowed', message: 'You cannot view this order.' });
   }
-  const handleMap = { cashapp: order.cashapp, venmo: order.venmo, paypal: order.paypal };
+  const handleMap = { cashapp: order.cashapp, venmo: order.venmo, paypal: order.paypal, crypto: order.crypto };
   const deliverables = await db.all(
     'SELECT id, original_name FROM deliverables WHERE product_id = ? ORDER BY position, id',
     order.product_id

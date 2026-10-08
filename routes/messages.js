@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
 // A single conversation thread.
 router.get('/:id', async (req, res) => {
   const conv = await db.get(
-    `SELECT c.*, s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal
+    `SELECT c.*, s.display_name AS seller_name, s.cashapp, s.venmo, s.paypal, s.crypto
        FROM conversations c JOIN users s ON s.id = c.seller_id WHERE c.id = ?`,
     req.params.id
   );
