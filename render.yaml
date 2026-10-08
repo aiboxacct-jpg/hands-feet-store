@@ -6,6 +6,7 @@ services:
     name: creator-store
     runtime: node
     plan: free
+    branch: beauty-reposition
     buildCommand: npm install
     startCommand: npm start
     envVars:
